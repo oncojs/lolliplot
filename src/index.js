@@ -8,16 +8,16 @@ let data = {
       start: 0,
       end: 75,
     },
-    {
-      id: `DNA-binding`,
-      start: 125,
-      end: 275,
-    },
-    {
-      id: `Oligomerization`,
-      start: 325,
-      end: 375,
-    },
+    // {
+    //   id: `DNA-binding`,
+    //   start: 125,
+    //   end: 275,
+    // },
+    // {
+    //   id: `Oligomerization`,
+    //   start: 325,
+    //   end: 375,
+    // },
   ],
   mutations: [
     {
