@@ -1,8 +1,6 @@
 import * as d3 from 'd3'
 //import './d3-selection-multi/index'
 
-let data = [0, 5, 10]
-
 let easeOutCubic = (currentIteration, startValue, changeInValue, totalIterations) =>
   changeInValue * (Math.pow(currentIteration / totalIterations - 1, 3) + 1) + startValue
 
@@ -16,7 +14,7 @@ export default ({
   offsetLeft = 0,
   offsetTop = 0,
 } = {}) => {
-  // Similar to a React target elemen
+  // Similar to a React target element
   let root = document.querySelector(selector)
 
   if (!root) throw `Must select an existing element!`
@@ -26,6 +24,8 @@ export default ({
   labelSize = labelSize || `12px`
 
   let domainWidth = 500
+  let rangeHeight = 100
+  let scale = width / domainWidth
 
   let min = 0
   let max = domainWidth
@@ -100,9 +100,9 @@ export default ({
     .attr(`stroke`, `black`)
     .attr(`stroke-width`, 2)
     .attr(`x1`, 0)
-    .attr(`y1`, height)
+    .attr(`y1`, height - rangeHeight)
     .attr(`x2`, width)
-    .attr(`y2`, height)
+    .attr(`y2`, height - rangeHeight)
 
   for (let i = 0; i < numVerticalLines + 1; i++) {
     // vertical lines
@@ -115,8 +115,32 @@ export default ({
       .attr(`x1`, ((domain / numVerticalLines) * i) + min)
       .attr(`y1`, 50)
       .attr(`x2`, (width / numVerticalLines) * i)
-      .attr(`y2`, height)
+      .attr(`y2`, height - rangeHeight)
   }
+
+  // proteins on domain
+  data.proteins.forEach((d, i) => {
+    d3.select(`.chart`)
+      .append(`rect`)
+      .attr(`class`, `domain-${d.id}`)
+      .attr(`x`, d.start)
+      .attr(`y`, 50 - 20)
+      .attr(`width`, d.end - d.start)
+      .attr(`height`, 20)
+      .attr(`fill`, `hsl(${i * 100}, 80%, 70%)`)
+  })
+
+  // proteins on range
+  data.proteins.forEach((d, i) => {
+    d3.select(`.chart`)
+      .append(`rect`)
+      .attr(`class`, `range-${d.id}`)
+      .attr(`x`, d.start * scale)
+      .attr(`y`, height - 25)
+      .attr(`width`, (d.end - d.start) * scale)
+      .attr(`height`, 25)
+      .attr(`fill`, `hsl(${i * 100}, 80%, 70%)`)
+  })
 
   let dragging = false
   let zoomStart
@@ -235,8 +259,30 @@ export default ({
         .select(`.line-${i}`)
         .attr(`x1`, ((domain / numVerticalLines) * i) + min)
         .attr(`x2`, (width / numVerticalLines) * i)
-        .attr(`y2`, height)
+        .attr(`y2`, height - rangeHeight)
     }
+
+    // let minTimesScale = min * scale
+    // let maxScale = max * scale
+
+    let scaleLinear = d3.scaleLinear()
+      .domain([min, max])
+      .range([0, width])
+
+    console.log('test', min, max)
+
+    let widthZoomRatio = domainWidth / Math.max((max - min), 0.00001) // Do not divide by zero
+    let newRange = max - min
+    // proteins on range
+    data.proteins.forEach((d, i) => {
+      svg
+        .select(`.range-${d.id}`)
+        .attr(`x`, scaleLinear(d.start))
+        .attr(`y`, height - 25)
+        .attr(`width`, Math.max(0, (d.end - Math.max(d.start, min)) * widthZoomRatio * scale))
+        .attr(`height`, 25)
+        .attr(`fill`, `hsl(${i * 100}, 80%, 70%)`)
+    })
 
     if (animating) requestAnimationFrame(draw)
 
