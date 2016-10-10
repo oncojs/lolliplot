@@ -134,6 +134,33 @@ export default ({
       stroke: black,
     })
 
+
+  // Minimap
+
+  svg
+    .append(`g`)
+    .append(`rect`)
+    .attrs({
+      class: `minimap`,
+      x: yAxisOffset,
+      y: height - xAxisOffset + proteinHeight + 20,
+      ...dim(domainWidth, 50),
+      stroke: `rgb(138, 138, 138)`,
+      fill: `white`
+    })
+
+  svg
+    .append(`g`)
+    .append(`rect`)
+    .attrs({
+      class: `minimap-zoom-area`,
+      x: yAxisOffset + 0.5,
+      y: height - xAxisOffset + proteinHeight + 20 + 0.5,
+      ...dim(domainWidth - 1, 50 - 1),
+      fill: `rgba(162, 255, 196, 0.88)`,
+      'pointer-events': `none`,
+    })
+
   // Proteins
 
   data.proteins.forEach((d, i) => {
@@ -166,6 +193,7 @@ export default ({
       })
 
     // Chart clipPath
+
     d3.select(`.chart`)
       .append(`clipPath`)
       .attr(`id`, `chart-clip`)
@@ -189,6 +217,7 @@ export default ({
         y: height - xAxisOffset + proteinHeight,
         fill: `hsl(${i * 100}, 80%, 30%)`,
         'font-size': `11px`,
+        'pointer-events': `none`,
       })
 
     // Proteins on minimap
@@ -201,8 +230,22 @@ export default ({
         y: height - xAxisOffset + proteinHeight + 60,
         ...dim(d.end - d.start, 10),
         fill: `hsl(${i * 100}, 80%, 70%)`,
+        'pointer-events': `none`,
       })
   })
+
+  // Protein db label
+
+  let proteinDb = `pfam` // TODO: get from data
+
+  d3.select(`.chart`)
+    .append(`text`)
+    .text(proteinDb)
+    .attrs({
+      x: 5,
+      y: height - xAxisOffset + 25,
+      'font-size': `11px`,
+    })
 
   // Mutations
 
@@ -229,8 +272,8 @@ export default ({
       })
       .on(`mouseover`, () => {
         d3.select(`.tooltip`)
-          .style(`left`, d3.event.clientX + 15 + `px`)
-          .style(`top`, d3.event.clientY - 15 + `px`)
+          .style(`left`, d3.event.clientX + 20 + `px`)
+          .style(`top`, d3.event.clientY - 22 + `px`)
           .html(`
             <div>Mutation ID: ${d.id}</div>
             <div># of Cases: ${d.donors}</div>
@@ -253,6 +296,7 @@ export default ({
         x2: d.x + yAxisOffset + 0.5,
         y2: height - xAxisOffset + proteinHeight - (d.donors * 2) + 70,
         stroke: black,
+        'pointer-events': `none`,
       })
   })
 
@@ -370,20 +414,6 @@ export default ({
 
   })
 
-  // Minimap
-
-  svg
-    .append(`g`)
-    .append(`rect`)
-    .attrs({
-      class: `minimap`,
-      x: yAxisOffset,
-      y: height - xAxisOffset + proteinHeight + 20,
-      ...dim(domainWidth, 50),
-      fill: `rgba(200, 217, 201, 0.09)`,
-      stroke: `rgb(138, 138, 138)`,
-    })
-
   let minimap = document.querySelector(`.minimap`)
   let chart = document.querySelector(`.chart`)
   let resetBtn = document.querySelector(`#reset`)
@@ -428,6 +458,11 @@ export default ({
     if (dragging) {
       let difference = event.offsetX - zoomStart
       let zoom = d3.select(`.zoom`)
+
+      // if (difference + zoomStart > max + yAxisOffset) {
+        // difference -= event.offsetX - yAxisOffset - max
+      // }
+
       zoom.attr(`width`, Math.abs(difference))
 
       if (difference < 0) {
@@ -593,6 +628,14 @@ export default ({
       d3.select(`.consquence-counts-${type}`)
         .text(`${type}: ${visibleConsequences[type].length}`)
     })
+
+    // Minimap zoom area
+
+    d3.select(`.minimap-zoom-area`)
+      .attrs({
+        x: min + yAxisOffset + 0.5,
+        width: max - min - 1,
+      })
 
     if (animating) requestAnimationFrame(draw)
 

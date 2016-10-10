@@ -27,7 +27,7 @@ let data = {
   mutations: [
     ...(Array(111).fill(1).map((x, i) => ({
       id: `MU${i}`,
-      donors: (i * Math.random() / 6) % 20,
+      donors: Math.round((i * Math.random() / 6) % 20),
       x: (i * Date.now()) % 500,
       consequence: `type-${(i % 4) + 1
       }`,
