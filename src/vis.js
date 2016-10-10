@@ -297,7 +297,7 @@ export default ({
       svg
         .select(`.range-${d.id}`)
         .attrs({
-          x: scaleLinear(d.start),
+          x: Math.max(0, scaleLinear(d.start)),
           y: height - 25,
           ...dim(width, 25),
           fill: `hsl(${i * 100}, 80%, 70%)`,
