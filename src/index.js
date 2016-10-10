@@ -33,7 +33,7 @@ let data = {
     {
       id: 'MU2',
       donors: 7,
-      x: 220,
+      x: 250,
     },
   ]
 }

@@ -56,7 +56,7 @@ export default ({
   let zooming = false
   let animating = false
   let currentAnimationIteration = 0
-  let totalAnimationIterations = 40
+  let totalAnimationIterations = 30
 
   let dragging = false
   let zoomStart
@@ -139,6 +139,24 @@ export default ({
         ...dim(((d.end - d.start) * scale) - 1, proteinHeight - 0.5),
         fill: `hsl(${i * 100}, 80%, 90%)`,
       })
+      .on(`mouseover`, function() {
+        d3.select(this)
+          .attrs({
+            fill: `hsl(${i * 100}, 85%, 70%)`
+          })
+      })
+      .on(`mouseout`, function() {
+        d3.select(this)
+          .attrs({
+            fill: `hsl(${i * 100}, 80%, 90%)`
+          })
+      })
+      .on(`click`, function() {
+        targetMin = d.start
+        targetMax = d.end
+        animating = true
+        draw()
+      })
   })
 
   // Mutations
@@ -147,11 +165,22 @@ export default ({
     d3.select(`.chart`)
       .append(`line`)
       .attrs({
+        class: `mutation-line-${d.id}`,
         x1: (d.x * scale) + yAxisOffset + 0.5,
         y1: height - xAxisOffset,
         x2: (d.x * scale) + yAxisOffset + 0.5,
         y2: height - xAxisOffset - d.donors * 10,
         stroke: black,
+      })
+
+    d3.select(`.chart`)
+      .append(`circle`)
+      .attrs({
+        class: `mutation-circle-${d.id}`,
+        cx: (d.x * scale) + yAxisOffset + 0.5,
+        cy: height - xAxisOffset - d.donors * 10,
+        r: d.donors,
+        fill: `rgb(158, 201, 121)`,
       })
   })
 
@@ -214,6 +243,7 @@ export default ({
 
   let minimap = document.querySelector(`.minimap`)
   let chart = document.querySelector(`.chart`)
+  let resetBtn = document.querySelector(`#reset`)
 
   minimap.addEventListener(`mousedown`, event => {
     dragging = true
@@ -231,7 +261,6 @@ export default ({
       })
   })
 
-
   chart.addEventListener(`mouseup`, event => {
     if (dragging) {
       dragging = false
@@ -240,10 +269,10 @@ export default ({
       let zoom = d3.select(`.zoom`)
 
       targetMin =
-        (difference < 0 ? event.offsetX : +zoom.attr(`x`)) - yAxisOffset,
+        (difference < 0 ? event.offsetX : +zoom.attr(`x`)) - yAxisOffset
 
       targetMax =
-        (difference < 0 ? event.offsetX + +zoom.attr(`width`) : event.offsetX) - yAxisOffset,
+        (difference < 0 ? event.offsetX + +zoom.attr(`width`) : event.offsetX) - yAxisOffset
 
       animating = true
       draw()
@@ -264,6 +293,13 @@ export default ({
     }
   })
 
+  resetBtn.addEventListener(`click`, () => {
+    targetMin = 0
+    targetMax = domainWidth
+    animating = true
+    draw()
+  })
+
   let handleAnimationEnd = (min, max) => {
     animating = false
     startMin = min
@@ -273,7 +309,7 @@ export default ({
 
   let shouldAnimationFinish = ({ startMin, targetMin, startMax, targetMax, min, max }) => {
     if (
-      (startMin < targetMin && startMax < targetMax) &&
+      (startMin <= targetMin && startMax <= targetMax) &&
       (min >= targetMin && max >= targetMax)
     ) {
       handleAnimationEnd(min, max)
@@ -281,7 +317,7 @@ export default ({
     }
 
     if (
-      (startMin < targetMin && startMax > targetMax) &&
+      (startMin <= targetMin && startMax >= targetMax) &&
       (min >= targetMin && max <= targetMax)
     ) {
       handleAnimationEnd(min, max)
@@ -289,7 +325,7 @@ export default ({
     }
 
     if (
-      (startMin > targetMin && startMax > targetMax) &&
+      (startMin >= targetMin && startMax >= targetMax) &&
       (min <= targetMin && max <= targetMax)
     ) {
       handleAnimationEnd(min, max)
@@ -297,8 +333,8 @@ export default ({
     }
 
     if (
-      (startMin < targetMin && startMax < targetMax) &&
-      (min >= targetMin && max >= targetMax)
+      (startMin >= targetMin && startMax <= targetMax) &&
+      (min <= targetMin && max >= targetMax)
     ) {
       handleAnimationEnd(min, max)
       return
@@ -334,31 +370,53 @@ export default ({
 
     let widthZoomRatio = domainWidth / Math.max((max - min), 0.00001) // Do not divide by zero
 
-    // proteins on range
+    // Protein bars
+
     data.proteins.forEach((d, i) => {
       let barWidth = (d.end - Math.max(d.start, min)) * widthZoomRatio * scale
-      let x = Math.max(0, scaleLinear(d.start)) + yAxisOffset
+      let x = Math.max(yAxisOffset, scaleLinear(d.start))
 
       let x2 = x + barWidth
 
       if (x2 > xLength) {
-        barWidth -= x2 - xLength - yAxisOffset + 1
+        barWidth -= x2 - xLength - yAxisOffset
       }
 
       d3.select(`.range-${d.id}`)
         .attrs({
           x: x + 0.5,
           y: height - xAxisOffset + 0.5,
-          ...dim(Math.max(0, barWidth), proteinHeight - 0.5),
+          ...dim(Math.max(0, barWidth - 1), proteinHeight - 0.5),
           fill: `hsl(${i * 100}, 80%, 90%)`,
         })
     })
+
+    // Horizontal ticks
 
     for (let i = 1; i < numXTicks; i++) {
       let length = domain / numXTicks
       d3.select(`.xTick-${i}`)
         .text(Math.round((length * i) + min))
     }
+
+    // Mutations
+
+    data.mutations.forEach(d => {
+      let x = Math.min(Math.max(yAxisOffset, scaleLinear(d.x)), xLength + yAxisOffset)
+
+      d3.select(`.mutation-line-${d.id}`)
+        .attrs({
+          x1: x,
+          x2: x,
+        })
+
+      d3.select(`.mutation-circle-${d.id}`)
+        .attrs({
+          cx: x,
+          r: d.donors,
+          fill: `rgb(158, 201, 121)`,
+        })
+    })
 
     if (animating) requestAnimationFrame(draw)
 
