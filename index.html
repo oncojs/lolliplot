@@ -3,7 +3,13 @@
   <head>
     <title>Protein Viewer</title>
     <style>
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+        -webkit-user-select: none;  /* Chrome all / Safari all */
+        -moz-user-select: none;     /* Firefox all */
+        -ms-user-select: none;      /* IE 10+ */
+        user-select: none;          /* Likely future */
+      }
       html, body, #root {
         margin: 0;
         font-family: 'Helvetica';

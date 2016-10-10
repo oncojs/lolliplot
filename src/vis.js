@@ -146,7 +146,8 @@ export default ({
       y: height - xAxisOffset + proteinHeight + 20,
       ...dim(domainWidth, 50),
       stroke: `rgb(138, 138, 138)`,
-      fill: `white`
+      fill: `white`,
+      cursor: `text`,
     })
 
   svg
@@ -176,14 +177,26 @@ export default ({
       .on(`mouseover`, function() {
         d3.select(this)
           .attrs({
-            fill: `hsl(${i * 100}, 85%, 70%)`
+            fill: `hsl(${i * 100}, 85%, 70%)`,
+            cursor: `pointer`,
           })
+
+        d3.select(`.tooltip`)
+          .style(`left`, d3.event.clientX + 20 + `px`)
+          .style(`top`, d3.event.clientY - 22 + `px`)
+          .html(`
+            <div>${d.id}</div>
+            <div>${d.description}</div>
+            <div><b>Click to zoom</b></div>
+          `)
       })
       .on(`mouseout`, function() {
         d3.select(this)
           .attrs({
             fill: `hsl(${i * 100}, 80%, 90%)`
           })
+
+        d3.select(`.tooltip`).style(`left`, `-9999px`)
       })
       .on(`click`, function() {
         targetMin = d.start
@@ -281,8 +294,7 @@ export default ({
           `)
       })
       .on(`mouseout`, () => {
-        d3.select(`.tooltip`)
-          .style(`left`, `-9999px`)
+        d3.select(`.tooltip`).style(`left`, `-9999px`)
       })
 
     // Mutation lines on minimap
@@ -387,9 +399,10 @@ export default ({
     .text(`${data.mutations.length} Mutations`)
     .attrs({
       class: `mutation-count`,
-      x: width - statsBoxWidth + 20,
-      y: 20,
+      x: width - statsBoxWidth + 30,
+      y: 15,
       'font-weight': 100,
+      'font-size': `14px`
     })
 
   let consequences =
@@ -400,6 +413,18 @@ export default ({
         : [val]
     }), {})
 
+    svg
+      .append(`g`)
+      .append(`text`)
+      .text(`Consequence:`)
+      .attrs({
+        class: `consquence-label`,
+        x: width - statsBoxWidth + 30,
+        y: 40,
+        'font-weight': `bold`,
+        'font-size': `12px`
+      })
+
   Object.keys(consequences).map((type, i) => {
     svg
       .append(`g`)
@@ -407,9 +432,10 @@ export default ({
       .text(`${type}: ${consequences[type].length}`)
       .attrs({
         class: `consquence-counts-${type}`,
-        x: width - statsBoxWidth + 20,
+        x: width - statsBoxWidth + 30,
         y: 20 * (i + 1) + 40,
         'font-weight': 100,
+        'font-size': `12px`
       })
 
   })
@@ -431,6 +457,7 @@ export default ({
         y: height - xAxisOffset + proteinHeight + 20,
         ...dim(0, 50),
         fill: `rgba(83, 215, 88, 0.51)`,
+        cursor: `text`,
       })
   })
 

@@ -7,21 +7,25 @@ let data = {
       id: `TAS`,
       start: 0,
       end: 75,
+      description: `von Hippel-Lindau disease tumour suppressor, beta/alpha domain`,
     },
     {
       id: `DNA-binding`,
       start: 125,
       end: 275,
+      description: `von Hippel-Lindau disease tumour suppressor, beta/alpha domain`,
     },
     {
       id: `Oligomerization`,
       start: 325,
       end: 375,
+      description: `von Hippel-Lindau disease tumour suppressor, beta/alpha domain`,
     },
     {
       id: `zzz`,
       start: 450,
       end: 500,
+      description: `von Hippel-Lindau disease tumour suppressor, beta/alpha domain`,
     },
   ],
   mutations: [
