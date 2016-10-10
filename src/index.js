@@ -25,17 +25,22 @@ let data = {
     },
   ],
   mutations: [
-    {
-      id: 'MU1',
-      donors: 10,
-      x: 100,
-    },
-    {
-      id: 'MU2',
-      donors: 7,
-      x: 250,
-    },
-  ]
+    // {
+    //   id: 'MU1',
+    //   donors: 10,
+    //   x: 100,
+    // },
+    // {
+    //   id: 'MU2',
+    //   donors: 7,
+    //   x: 250,
+    // },
+    ...(Array(111).fill(1).map((x, i) => ({
+      id: `MU${i}`,
+      donors: (i * Math.random() / 6) % 20,
+      x: (i * Date.now()) % 500,
+    })))
+  ],
 }
 
 // index file

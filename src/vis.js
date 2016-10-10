@@ -1,3 +1,5 @@
+// @flow
+
 import * as d3 from 'd3'
 import attrs from './attrs'
 
@@ -16,6 +18,10 @@ let dim = (width, height) => ({ width, height })
 
 let black = `rgb(55, 55, 55)`
 
+/**
+ *
+ *  This is the protein viewer function.
+*/
 export default ({
   clickHandler,
   data,
@@ -51,7 +57,8 @@ export default ({
   let statsBoxWidth = 300
   let proteinHeight = 40
 
-  let scale = (width - yAxisOffset - statsBoxWidth) / domainWidth
+  let xAxisLength = width - yAxisOffset - statsBoxWidth
+  let scale = (xAxisLength) / domainWidth
 
   let zooming = false
   let animating = false
@@ -127,7 +134,7 @@ export default ({
       stroke: black,
     })
 
-  // Protein Bar
+  // Proteins
 
   data.proteins.forEach((d, i) => {
     d3.select(`.chart`)
@@ -156,6 +163,16 @@ export default ({
         targetMax = d.end
         animating = true
         draw()
+      })
+
+    d3.select(`.chart`)
+      .append(`rect`)
+      .attrs({
+        class: `domain-${d.id}`,
+        x: d.start + yAxisOffset,
+        y: height - xAxisOffset + proteinHeight + 50,
+        ...dim(d.end - d.start, 20),
+        fill: `hsl(${i * 100}, 80%, 70%)`,
       })
   })
 
