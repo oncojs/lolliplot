@@ -184,6 +184,41 @@ export default ({
       })
   })
 
+  // Vertical ticks
+
+  let maxDonors = 20 // TODO mutation donor max
+
+  let scaleLinearY = d3.scaleLinear()
+    .domain([0, maxDonors])
+    .range([height - xAxisOffset, 0])
+
+  svg.append(`g`).attr(`class`, `yTicks`)
+
+  let numYTicks = 8
+
+  for (let i = 1; i < numYTicks; i++) {
+    d3.select(`.yTicks`)
+      .append(`text`)
+      .text(Math.round(maxDonors / numYTicks) * i)
+      .attrs({
+        class: `yTick-${i}`,
+        x: yAxisOffset - 10,
+        y: scaleLinearY((maxDonors / numYTicks) * i) + 3,
+        'font-size': `11px`,
+        'text-anchor': `end`,
+      })
+
+    d3.select(`.yTicks`)
+      .append(`line`)
+      .attrs({
+        x1: yAxisOffset - 7,
+        y1: scaleLinearY((maxDonors / numYTicks) * i),
+        x2: yAxisOffset,
+        y2: scaleLinearY((maxDonors / numYTicks) * i),
+        stroke: black,
+      })
+  }
+
   // Horizontal ticks
 
   svg.append(`g`).attr(`class`, `xTicks`)
