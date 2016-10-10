@@ -227,6 +227,20 @@ export default ({
         r: Math.max(3, d.donors / 2),
         fill: `rgb(158, 201, 121)`,
       })
+      .on(`mouseover`, () => {
+        d3.select(`.tooltip`)
+          .style(`left`, d3.event.clientX + 15 + `px`)
+          .style(`top`, d3.event.clientY - 15 + `px`)
+          .html(`
+            <div>Mutation ID: ${d.id}</div>
+            <div># of Cases: ${d.donors}</div>
+            <div>Amino Acid Change: Arg<b>${d.x}</b>Ter</div>
+          `)
+      })
+      .on(`mouseout`, () => {
+        d3.select(`.tooltip`)
+          .style(`left`, `-9999px`)
+      })
 
     // Mutation lines on minimap
 

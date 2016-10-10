@@ -26,6 +26,13 @@
         margin-bottom: 40px;
         display: inline-block;
       }
+      .tooltip {
+        position: absolute;
+        left: -9999px;
+        background: white;
+        padding: 8px;
+        border: 1px solid rgb(139, 139, 139);
+      }
   </style>
   </head>
   <body>
@@ -35,6 +42,7 @@
       </div>
       <div id="root"></div>
       <button id="reset">Reset</button>
+      <div class="tooltip"></div>
     </div>
     <script src="/static/bundle.js"></script>
   </body>
