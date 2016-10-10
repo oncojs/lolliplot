@@ -329,10 +329,32 @@ export default ({
     .text(`${data.mutations.length} Mutations`)
     .attrs({
       class: `mutation-count`,
-      x: width - statsBoxWidth + 10,
+      x: width - statsBoxWidth + 20,
       y: 20,
       'font-weight': 100,
     })
+
+  let consequences =
+    data.mutations.reduce((acc, val) => ({
+      ...acc,
+      [val.consequence]: acc[val.consequence]
+        ? [...acc[val.consequence], val]
+        : [val]
+    }), {})
+
+  Object.keys(consequences).map((type, i) => {
+    svg
+      .append(`g`)
+      .append(`text`)
+      .text(`${type}: ${consequences[type].length}`)
+      .attrs({
+        class: `consquence-counts-${type}`,
+        x: width - statsBoxWidth + 20,
+        y: 20 * (i + 1) + 40,
+        'font-weight': 100,
+      })
+
+  })
 
   // Minimap
 
@@ -535,8 +557,28 @@ export default ({
 
     let visibleMutations = data.mutations.filter(d => d.x > min && d.x < max)
 
+    let visibleConsequences =
+      visibleMutations.reduce((acc, val) => ({
+        ...acc,
+        [val.consequence]: acc[val.consequence]
+        ? [...acc[val.consequence], val]
+        : [val]
+      }), {})
+
+    Object.keys(consequences).map(type => {
+      if (!visibleConsequences[type]) {
+        d3.select(`.consquence-counts-${type}`)
+          .text(`${type}: 0`)
+      }
+    })
+
     d3.select(`.mutation-count`)
       .text(`${visibleMutations.length} Mutations`)
+
+    Object.keys(visibleConsequences).map((type, i) => {
+      d3.select(`.consquence-counts-${type}`)
+        .text(`${type}: ${visibleConsequences[type].length}`)
+    })
 
     if (animating) requestAnimationFrame(draw)
 
