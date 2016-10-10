@@ -165,18 +165,31 @@ export default ({
         draw()
       })
 
+    // Chart clipPath
+    d3.select(`.chart`)
+      .append(`clipPath`)
+      .attr(`id`, `chart-clip`)
+      .append(`rect`)
+      .attrs({
+        x: yAxisOffset,
+        y: 0,
+        width: width - yAxisOffset - statsBoxWidth,
+        height: height - xAxisOffset + proteinHeight,
+      })
+
     // Protein Names
 
     d3.select(`.chart`)
-    .append(`text`)
-    .text(d.id.toUpperCase())
-    .attrs({
-      class: `protein-name-${d.id}`,
-      x: (d.start * scale) + yAxisOffset,
-      y: height - xAxisOffset + proteinHeight,
-      fill: `hsl(${i * 100}, 80%, 30%)`,
-      'font-size': `11px`,
-    })
+      .append(`text`)
+      .text(d.id.toUpperCase())
+      .attrs({
+        class: `protein-name-${d.id}`,
+        'clip-path': `url(#chart-clip)`,
+        x: (d.start * scale) + yAxisOffset,
+        y: height - xAxisOffset + proteinHeight,
+        fill: `hsl(${i * 100}, 80%, 30%)`,
+        'font-size': `11px`,
+      })
 
     // Proteins on minimap
 
@@ -472,6 +485,7 @@ export default ({
       let x2 = x + barWidth
 
       if (x2 > xLength) {
+        // NOTE: this could be refactored using the chart clip path
         barWidth -= x2 - xLength - yAxisOffset
       }
 
@@ -483,8 +497,10 @@ export default ({
           fill: `hsl(${i * 100}, 80%, 90%)`,
         })
 
+      // Protein names
+
       d3.select(`.protein-name-${d.id}`)
-        .attrs({ x })
+        .attrs({ x }) // TODO: if offscreen, don't hug left edge
     })
 
     // Horizontal ticks
