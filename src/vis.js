@@ -46,12 +46,22 @@ export default ({
   let domain = max - min
 
   let yAxisOffset = 35
-  let xAxisOffset = 100
+  let xAxisOffset = 200
 
   let statsBoxWidth = 300
   let proteinHeight = 40
 
   let scale = (width - yAxisOffset - statsBoxWidth) / domainWidth
+
+  let zooming = false
+  let animating = false
+  let currentAnimationIteration = 0
+  let totalAnimationIterations = 40
+
+  let dragging = false
+  let zoomStart
+
+  // Main Chart
 
   let svg = d3
     .select(selector)
@@ -61,10 +71,7 @@ export default ({
       ...dim(width, height),
     })
 
-  let zooming = false
-  let animating = false
-  let i = 0
-  let ti = 40
+  // yAxis
 
   svg
     .append(`g`)
@@ -78,17 +85,7 @@ export default ({
       stroke: black,
     })
 
-  svg
-    .append(`g`)
-    .append(`line`)
-    .attrs({
-      class: `yAxisRight`,
-      x1: width - statsBoxWidth,
-      y1: height - xAxisOffset,
-      x2: width - statsBoxWidth,
-      y2: height - xAxisOffset + proteinHeight,
-      stroke: black,
-    })
+  // xAxis
 
   svg
     .append(`g`)
@@ -102,6 +99,22 @@ export default ({
       stroke: black,
     })
 
+  // Vertical line on the right of the protein bar
+
+  svg
+    .append(`g`)
+    .append(`line`)
+    .attrs({
+      class: `yAxisRight`,
+      x1: width - statsBoxWidth,
+      y1: height - xAxisOffset,
+      x2: width - statsBoxWidth,
+      y2: height - xAxisOffset + proteinHeight,
+      stroke: black,
+    })
+
+  // Horizontal line under protein bar
+
   svg
     .append(`g`)
     .append(`line`)
@@ -114,19 +127,35 @@ export default ({
       stroke: black,
     })
 
-  // zoom select area
+    // Protein Bar
+
+    data.proteins.forEach((d, i) => {
+      d3.select(`.chart`)
+        .append(`rect`)
+        .attrs({
+          class: `range-${d.id}`,
+          x: (d.start * scale) + yAxisOffset + 0.5,
+          y: height - xAxisOffset + 0.5,
+          ...dim(((d.end - d.start) * scale) - 1, proteinHeight - 0.5),
+          fill: `hsl(${i * 100}, 80%, 70%)`,
+        })
+    })
+
+  // Minimap
+
   svg
     .append(`g`)
     .append(`rect`)
     .attrs({
-      class: `select-zoom`,
+      class: `minimap`,
       x: yAxisOffset,
       y: height - xAxisOffset + proteinHeight,
       ...dim(domainWidth, 50),
       fill: `rgba(83, 215, 88, 0.09)`
     })
 
-  // proteins on domain
+  // Proteins on minimap
+
   data.proteins.forEach((d, i) => {
     d3.select(`.chart`)
       .append(`rect`)
@@ -139,38 +168,27 @@ export default ({
       })
   })
 
-  // proteins on range
-  data.proteins.forEach((d, i) => {
-    d3.select(`.chart`)
-      .append(`rect`)
-      .attrs({
-        class: `range-${d.id}`,
-        x: (d.start * scale) + yAxisOffset + 0.5,
-        y: height - xAxisOffset + 0.5,
-        ...dim((d.end - d.start) * scale, proteinHeight - 0.5),
-        fill: `hsl(${i * 100}, 80%, 70%)`,
-      })
-  })
+  let minimap = document.querySelector(`.minimap`)
+  let chart = document.querySelector(`.chart`)
 
-  let dragging = false
-  let zoomStart
-
-  document.querySelector(`.select-zoom`).addEventListener(`mousedown`, event => {
+  minimap.addEventListener(`mousedown`, event => {
     dragging = true
     zoomStart = event.offsetX
 
-    svg.append(`g`)
+    svg
+      .append(`g`)
       .append(`rect`)
       .attrs({
         class: `zoom`,
         x: event.offsetX,
-        y: 0,
+        y: height - xAxisOffset + proteinHeight,
         ...dim(0, 50),
         fill: `rgba(83, 215, 88, 0.51)`,
       })
   })
 
-  document.querySelector(`.chart`).addEventListener(`mouseup`, event => {
+
+  chart.addEventListener(`mouseup`, event => {
     if (dragging) {
       dragging = false
 
@@ -181,13 +199,13 @@ export default ({
       targetMax = difference < 0 ? event.offsetX + +zoom.attr(`width`) : event.offsetX,
 
       animating = true
-      draw(0)
+      draw()
 
       zoom.remove()
     }
   })
 
-  document.querySelector(`.chart`).addEventListener(`mousemove`, event => {
+  chart.addEventListener(`mousemove`, event => {
     if (dragging) {
       let difference = event.offsetX - zoomStart
       let zoom = d3.select(`.zoom`)
@@ -203,7 +221,7 @@ export default ({
     animating = false
     startMin = min
     startMax = max
-    i = 0
+    currentAnimationIteration = 0
   }
 
   let shouldAnimationFinish = ({ startMin, targetMin, startMax, targetMax, min, max }) => {
@@ -240,22 +258,22 @@ export default ({
     }
   }
 
-  let calculateNextCoordinate = ({ start, target, i }) => {
+  let calculateNextCoordinate = ({ start, target, currentAnimationIteration }) => {
     let next = start < target
-      ? easeOutCubic(i, start, target - start, ti)
-      : start + target - easeOutCubic(i, target, start - target, ti)
+      ? easeOutCubic(currentAnimationIteration, start, target - start, totalAnimationIterations)
+      : start + target - easeOutCubic(currentAnimationIteration, target, start - target, totalAnimationIterations)
 
     return start < target
       ? Math.min(next, target)
       : Math.max(next, target)
   }
 
-  let draw = t => {
+  let draw = () => {
 
-    min = calculateNextCoordinate({ start: startMin, target: targetMin, i })
-    max = calculateNextCoordinate({ start: startMax, target: targetMax, i })
+    min = calculateNextCoordinate({ start: startMin, target: targetMin, currentAnimationIteration })
+    max = calculateNextCoordinate({ start: startMax, target: targetMax, currentAnimationIteration })
 
-    i++
+    currentAnimationIteration++
 
     shouldAnimationFinish({ startMin, startMax, targetMin, targetMax, min, max })
 
@@ -271,8 +289,7 @@ export default ({
     data.proteins.forEach((d, i) => {
       let width = Math.max(0, (d.end - Math.max(d.start, min)) * widthZoomRatio * scale)
 
-      svg
-        .select(`.range-${d.id}`)
+      d3.select(`.range-${d.id}`)
         .attrs({
           x: Math.max(0, scaleLinear(d.start)) + yAxisOffset + 0.5,
           y: height - xAxisOffset + 0.5,

@@ -18,6 +18,11 @@ let data = {
       start: 325,
       end: 375,
     },
+    {
+      id: `zzz`,
+      start: 450,
+      end: 500,
+    },
   ],
   mutations: [
     {
@@ -38,5 +43,5 @@ vis({
   selector: `#root`,
   data,
   clickHandler: d => console.dir(d),
-  height: 400,
+  height: 500,
 })
