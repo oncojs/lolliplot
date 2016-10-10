@@ -51,7 +51,7 @@ export default ({
   let targetMin, targetMax
   let domain = max - min
 
-  let yAxisOffset = 35
+  let yAxisOffset = 45
   let xAxisOffset = 200
 
   let statsBoxWidth = 300
@@ -165,13 +165,28 @@ export default ({
         draw()
       })
 
+    // Protein Names
+
+    d3.select(`.chart`)
+    .append(`text`)
+    .text(d.id.toUpperCase())
+    .attrs({
+      class: `protein-name-${d.id}`,
+      x: (d.start * scale) + yAxisOffset,
+      y: height - xAxisOffset + proteinHeight,
+      fill: `hsl(${i * 100}, 80%, 30%)`,
+      'font-size': `11px`,
+    })
+
+    // Proteins on minimap
+
     d3.select(`.chart`)
       .append(`rect`)
       .attrs({
         class: `domain-${d.id}`,
         x: d.start + yAxisOffset,
-        y: height - xAxisOffset + proteinHeight + 50,
-        ...dim(d.end - d.start, 20),
+        y: height - xAxisOffset + proteinHeight + 60,
+        ...dim(d.end - d.start, 10),
         fill: `hsl(${i * 100}, 80%, 70%)`,
       })
   })
@@ -196,10 +211,35 @@ export default ({
         class: `mutation-circle-${d.id}`,
         cx: (d.x * scale) + yAxisOffset + 0.5,
         cy: height - xAxisOffset - d.donors * 10,
-        r: d.donors,
+        r: Math.max(3, d.donors / 2),
         fill: `rgb(158, 201, 121)`,
       })
+
+    // Mutation lines on minimap
+
+    d3.select(`.chart`)
+      .append(`line`)
+      .attrs({
+        class: `mutation-line-${d.id}`,
+        x1: d.x + yAxisOffset,
+        y1: height - xAxisOffset + proteinHeight + 70,
+        x2: d.x + yAxisOffset + 0.5,
+        y2: height - xAxisOffset + proteinHeight - (d.donors * 2) + 70,
+        stroke: black,
+      })
   })
+
+  // yAxis label
+
+  d3.select(`.chart`)
+    .append(`text`)
+    .text(`# of Cases`)
+    .attrs({
+      x: 5,
+      y: (height - xAxisOffset) / 2,
+      'font-size': `11px`,
+      transform: `rotate(270, 10, 124)`,
+    })
 
   // Vertical ticks
 
@@ -253,6 +293,7 @@ export default ({
         y: height - xAxisOffset + 20,
         'font-size': `11px`,
         'text-anchor': `middle`,
+        'pointer-events': `none`,
       })
 
     d3.select(`.xTicks`)
@@ -263,8 +304,21 @@ export default ({
         x2: length * i * scale + yAxisOffset,
         y2: height - xAxisOffset + 10,
         stroke: black,
+        'pointer-events': `none`,
       })
   }
+
+  // Stats Bar
+
+  svg
+    .append(`g`)
+    .append(`text`)
+    .text(`${data.mutations.length} Mutations`)
+    .attrs({
+      x: width - statsBoxWidth + 10,
+      y: 20,
+      'font-weight': 100,
+    })
 
   // Minimap
 
@@ -274,24 +328,11 @@ export default ({
     .attrs({
       class: `minimap`,
       x: yAxisOffset,
-      y: height - xAxisOffset + proteinHeight,
+      y: height - xAxisOffset + proteinHeight + 20,
       ...dim(domainWidth, 50),
-      fill: `rgba(83, 215, 88, 0.09)`
+      fill: `rgba(200, 217, 201, 0.09)`,
+      stroke: `rgb(138, 138, 138)`,
     })
-
-  // Proteins on minimap
-
-  data.proteins.forEach((d, i) => {
-    d3.select(`.chart`)
-      .append(`rect`)
-      .attrs({
-        class: `domain-${d.id}`,
-        x: d.start + yAxisOffset,
-        y: height - xAxisOffset + proteinHeight + 50,
-        ...dim(d.end - d.start, 20),
-        fill: `hsl(${i * 100}, 80%, 70%)`,
-      })
-  })
 
   let minimap = document.querySelector(`.minimap`)
   let chart = document.querySelector(`.chart`)
@@ -307,7 +348,7 @@ export default ({
       .attrs({
         class: `zoom`,
         x: event.offsetX,
-        y: height - xAxisOffset + proteinHeight,
+        y: height - xAxisOffset + proteinHeight + 20,
         ...dim(0, 50),
         fill: `rgba(83, 215, 88, 0.51)`,
       })
@@ -441,6 +482,9 @@ export default ({
           ...dim(Math.max(0, barWidth - 1), proteinHeight - 0.5),
           fill: `hsl(${i * 100}, 80%, 90%)`,
         })
+
+      d3.select(`.protein-name-${d.id}`)
+        .attrs({ x })
     })
 
     // Horizontal ticks
@@ -465,7 +509,7 @@ export default ({
       d3.select(`.mutation-circle-${d.id}`)
         .attrs({
           cx: x,
-          r: d.donors,
+          r: Math.max(3, d.donors / 2),
           fill: `rgb(158, 201, 121)`,
         })
     })

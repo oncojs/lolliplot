@@ -39,7 +39,7 @@ let data = {
       id: `MU${i}`,
       donors: (i * Math.random() / 6) % 20,
       x: (i * Date.now()) % 500,
-    })))
+    })).filter(x => x.donors > 0))
   ],
 }
 
@@ -48,5 +48,5 @@ vis({
   selector: `#root`,
   data,
   clickHandler: d => console.dir(d),
-  height: 500,
+  height: 450,
 })
