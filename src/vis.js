@@ -127,19 +127,63 @@ export default ({
       stroke: black,
     })
 
-    // Protein Bar
+  // Protein Bar
 
-    data.proteins.forEach((d, i) => {
-      d3.select(`.chart`)
-        .append(`rect`)
-        .attrs({
-          class: `range-${d.id}`,
-          x: (d.start * scale) + yAxisOffset + 0.5,
-          y: height - xAxisOffset + 0.5,
-          ...dim(((d.end - d.start) * scale) - 1, proteinHeight - 0.5),
-          fill: `hsl(${i * 100}, 80%, 70%)`,
-        })
-    })
+  data.proteins.forEach((d, i) => {
+    d3.select(`.chart`)
+      .append(`rect`)
+      .attrs({
+        class: `range-${d.id}`,
+        x: (d.start * scale) + yAxisOffset + 0.5,
+        y: height - xAxisOffset + 0.5,
+        ...dim(((d.end - d.start) * scale) - 1, proteinHeight - 0.5),
+        fill: `hsl(${i * 100}, 80%, 90%)`,
+      })
+  })
+
+  // Mutations
+
+  data.mutations.forEach(d => {
+    d3.select(`.chart`)
+      .append(`line`)
+      .attrs({
+        x1: (d.x * scale) + yAxisOffset + 0.5,
+        y1: height - xAxisOffset,
+        x2: (d.x * scale) + yAxisOffset + 0.5,
+        y2: height - xAxisOffset - d.donors * 10,
+        stroke: black,
+      })
+  })
+
+  // Horizontal ticks
+
+  svg.append(`g`).attr(`class`, `xTicks`)
+
+  let numXTicks = 12
+
+  for (let i = 1; i < numXTicks; i++) {
+    let length = domainWidth / numXTicks
+    d3.select(`.xTicks`)
+      .append(`text`)
+      .text(Math.round(length * i))
+      .attrs({
+        class: `xTick-${i}`,
+        x: length * i * scale + yAxisOffset,
+        y: height - xAxisOffset + 20,
+        'font-size': `11px`,
+        'text-anchor': `middle`,
+      })
+
+    d3.select(`.xTicks`)
+      .append(`line`)
+      .attrs({
+        x1: length * i * scale + yAxisOffset,
+        y1: height - xAxisOffset,
+        x2: length * i * scale + yAxisOffset,
+        y2: height - xAxisOffset + 10,
+        stroke: black,
+      })
+  }
 
   // Minimap
 
@@ -195,8 +239,11 @@ export default ({
       let difference = event.offsetX - zoomStart
       let zoom = d3.select(`.zoom`)
 
-      targetMin = difference < 0 ? event.offsetX : +zoom.attr(`x`),
-      targetMax = difference < 0 ? event.offsetX + +zoom.attr(`width`) : event.offsetX,
+      targetMin =
+        (difference < 0 ? event.offsetX : +zoom.attr(`x`)) - yAxisOffset,
+
+      targetMax =
+        (difference < 0 ? event.offsetX + +zoom.attr(`width`) : event.offsetX) - yAxisOffset,
 
       animating = true
       draw()
@@ -279,24 +326,39 @@ export default ({
 
     domain = max - min
 
+    let xLength = width - yAxisOffset - statsBoxWidth
+
     let scaleLinear = d3.scaleLinear()
       .domain([min, max])
-      .range([0, width])
+      .range([yAxisOffset, width - statsBoxWidth])
 
     let widthZoomRatio = domainWidth / Math.max((max - min), 0.00001) // Do not divide by zero
 
     // proteins on range
     data.proteins.forEach((d, i) => {
-      let width = Math.max(0, (d.end - Math.max(d.start, min)) * widthZoomRatio * scale)
+      let barWidth = (d.end - Math.max(d.start, min)) * widthZoomRatio * scale
+      let x = Math.max(0, scaleLinear(d.start)) + yAxisOffset
+
+      let x2 = x + barWidth
+
+      if (x2 > xLength) {
+        barWidth -= x2 - xLength - yAxisOffset + 1
+      }
 
       d3.select(`.range-${d.id}`)
         .attrs({
-          x: Math.max(0, scaleLinear(d.start)) + yAxisOffset + 0.5,
+          x: x + 0.5,
           y: height - xAxisOffset + 0.5,
-          ...dim(width, proteinHeight - 0.5),
-          fill: `hsl(${i * 100}, 80%, 70%)`,
+          ...dim(Math.max(0, barWidth), proteinHeight - 0.5),
+          fill: `hsl(${i * 100}, 80%, 90%)`,
         })
     })
+
+    for (let i = 1; i < numXTicks; i++) {
+      let length = domain / numXTicks
+      d3.select(`.xTick-${i}`)
+        .text(Math.round((length * i) + min))
+    }
 
     if (animating) requestAnimationFrame(draw)
 
