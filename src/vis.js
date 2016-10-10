@@ -3,10 +3,18 @@ import attrs from './attrs'
 
 d3.selection.prototype.attrs = attrs
 
+// Easing
+
 let easeOutCubic = (currentIteration, startValue, changeInValue, totalIterations) =>
   changeInValue * (Math.pow(currentIteration / totalIterations - 1, 3) + 1) + startValue
 
+// Spatial
+
 let dim = (width, height) => ({ width, height })
+
+// Color
+
+let black = `rgb(55, 55, 55)`
 
 export default ({
   clickHandler,
@@ -29,7 +37,6 @@ export default ({
 
   let domainWidth = 500
   let rangeHeight = 100
-  let scale = width / domainWidth
 
   let min = 0
   let max = domainWidth
@@ -37,6 +44,14 @@ export default ({
   let startMax = max
   let targetMin, targetMax
   let domain = max - min
+
+  let yAxisOffset = 35
+  let xAxisOffset = 100
+
+  let statsBoxWidth = 300
+  let proteinHeight = 40
+
+  let scale = (width - yAxisOffset - statsBoxWidth) / domainWidth
 
   let svg = d3
     .select(selector)
@@ -46,35 +61,57 @@ export default ({
       ...dim(width, height),
     })
 
-  let numVerticalLines = 5
-
   let zooming = false
   let animating = false
   let i = 0
   let ti = 40
 
-  // min text
   svg
     .append(`g`)
-    .append(`text`)
-    .text(min)
+    .append(`line`)
     .attrs({
-      class: `min`,
-      x: 0,
-      y: 20,
-      fill: `black`
+      class: `yAxis`,
+      x1: yAxisOffset,
+      y1: 0,
+      x2: yAxisOffset,
+      y2: height - xAxisOffset + proteinHeight,
+      stroke: black,
     })
 
-  // max text
   svg
     .append(`g`)
-    .append(`text`)
-    .text(max)
+    .append(`line`)
     .attrs({
-      class: `max`,
-      x: domainWidth,
-      y: 20,
-      fill: `black`
+      class: `yAxisRight`,
+      x1: width - statsBoxWidth,
+      y1: height - xAxisOffset,
+      x2: width - statsBoxWidth,
+      y2: height - xAxisOffset + proteinHeight,
+      stroke: black,
+    })
+
+  svg
+    .append(`g`)
+    .append(`line`)
+    .attrs({
+      class: `xAxis`,
+      x1: yAxisOffset,
+      y1: height - xAxisOffset,
+      x2: width - statsBoxWidth,
+      y2: height - xAxisOffset,
+      stroke: black,
+    })
+
+  svg
+    .append(`g`)
+    .append(`line`)
+    .attrs({
+      class: `xAxisBottom`,
+      x1: yAxisOffset,
+      y1: height - xAxisOffset + proteinHeight + 0.5,
+      x2: width - statsBoxWidth,
+      y2: height - xAxisOffset + proteinHeight + 0.5,
+      stroke: black,
     })
 
   // zoom select area
@@ -83,57 +120,11 @@ export default ({
     .append(`rect`)
     .attrs({
       class: `select-zoom`,
-      x: 0,
-      y: 0,
+      x: yAxisOffset,
+      y: height - xAxisOffset + proteinHeight,
       ...dim(domainWidth, 50),
       fill: `rgba(83, 215, 88, 0.09)`
     })
-
-  let lineStyle = {
-    stroke: `black`,
-    'stroke-width': 2,
-  }
-
-  // domain
-  svg
-    .append(`g`)
-    .append(`line`)
-    .attrs({
-      class: `domain`,
-      x1: 0,
-      y1: 50,
-      x2: domainWidth,
-      y2: 50,
-      ...lineStyle,
-    })
-
-  // range
-  svg
-    .append(`g`)
-    .append(`line`)
-    .attrs({
-      class: `range`,
-      ...lineStyle,
-      x1: 0,
-      y1: height - rangeHeight,
-      x2: width,
-      y2: height - rangeHeight
-    })
-
-  for (let i = 0; i < numVerticalLines + 1; i++) {
-    // vertical lines
-    svg
-      .append(`g`)
-      .append(`line`)
-      .attrs({
-        class: `line-${i}`,
-        ...lineStyle,
-        x1: ((domain / numVerticalLines) * i) + min,
-        y1: 50,
-        x2: (width / numVerticalLines) * i,
-        y2: height - rangeHeight
-      })
-  }
 
   // proteins on domain
   data.proteins.forEach((d, i) => {
@@ -141,8 +132,8 @@ export default ({
       .append(`rect`)
       .attrs({
         class: `domain-${d.id}`,
-        x: d.start,
-        y: 50 - 20,
+        x: d.start + yAxisOffset,
+        y: height - xAxisOffset + proteinHeight + 50,
         ...dim(d.end - d.start, 20),
         fill: `hsl(${i * 100}, 80%, 70%)`,
       })
@@ -154,9 +145,9 @@ export default ({
       .append(`rect`)
       .attrs({
         class: `range-${d.id}`,
-        x: d.start * scale,
-        y: height - 25,
-        ...dim((d.end - d.start) * scale, 25),
+        x: (d.start * scale) + yAxisOffset + 0.5,
+        y: height - xAxisOffset + 0.5,
+        ...dim((d.end - d.start) * scale, proteinHeight - 0.5),
         fill: `hsl(${i * 100}, 80%, 70%)`,
       })
   })
@@ -270,20 +261,6 @@ export default ({
 
     domain = max - min
 
-    svg.select(`.min`).text(Math.round(min))
-    svg.select(`.max`).text(Math.round(max))
-
-    for (let i = 0; i < numVerticalLines + 1; i++) {
-      // vertical lines
-      svg
-        .select(`.line-${i}`)
-        .attrs({
-          x1: ((domain / numVerticalLines) * i) + min,
-          x2: (width / numVerticalLines) * i,
-          y2: height - rangeHeight
-        })
-    }
-
     let scaleLinear = d3.scaleLinear()
       .domain([min, max])
       .range([0, width])
@@ -297,9 +274,9 @@ export default ({
       svg
         .select(`.range-${d.id}`)
         .attrs({
-          x: Math.max(0, scaleLinear(d.start)),
-          y: height - 25,
-          ...dim(width, 25),
+          x: Math.max(0, scaleLinear(d.start)) + yAxisOffset + 0.5,
+          y: height - xAxisOffset + 0.5,
+          ...dim(width, proteinHeight - 0.5),
           fill: `hsl(${i * 100}, 80%, 70%)`,
         })
     })
