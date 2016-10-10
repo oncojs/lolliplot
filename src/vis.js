@@ -328,6 +328,7 @@ export default ({
     .append(`text`)
     .text(`${data.mutations.length} Mutations`)
     .attrs({
+      class: `mutation-count`,
       x: width - statsBoxWidth + 10,
       y: 20,
       'font-weight': 100,
@@ -529,6 +530,13 @@ export default ({
           fill: `rgb(158, 201, 121)`,
         })
     })
+
+    // Mutation count
+
+    let visibleMutations = data.mutations.filter(d => d.x > min && d.x < max)
+
+    d3.select(`.mutation-count`)
+      .text(`${visibleMutations.length} Mutations`)
 
     if (animating) requestAnimationFrame(draw)
 
