@@ -92,6 +92,19 @@ export default ({
       ...dim(width, height),
     })
 
+  // Chart clipPath
+
+  d3.select(`.chart`)
+    .append(`clipPath`)
+    .attr(`id`, `chart-clip`)
+    .append(`rect`)
+    .attrs({
+      x: yAxisOffset,
+      y: 0,
+      width: width - yAxisOffset - statsBoxWidth,
+      height: height - xAxisOffset + proteinHeight,
+    })
+
   // yAxis
 
   svg
@@ -182,6 +195,7 @@ export default ({
     d3.select(`.chart`)
       .append(`rect`)
       .attrs({
+        'clip-path': `url(#chart-clip)`,
         class: `range-${d.id}`,
         x: (d.start * scale) + yAxisOffset + 0.5,
         y: height - xAxisOffset + 0.5,
@@ -217,19 +231,6 @@ export default ({
         targetMax = d.end
         animating = true
         draw()
-      })
-
-    // Chart clipPath
-
-    d3.select(`.chart`)
-      .append(`clipPath`)
-      .attr(`id`, `chart-clip`)
-      .append(`rect`)
-      .attrs({
-        x: yAxisOffset,
-        y: 0,
-        width: width - yAxisOffset - statsBoxWidth,
-        height: height - xAxisOffset + proteinHeight,
       })
 
     // Protein Names
@@ -281,6 +282,7 @@ export default ({
       .append(`line`)
       .attrs({
         class: `mutation-line-${d.id}`,
+        'clip-path': `url(#chart-clip)`,
         x1: (d.x * scale) + yAxisOffset + 0.5,
         y1: height - xAxisOffset,
         x2: (d.x * scale) + yAxisOffset + 0.5,
@@ -292,6 +294,7 @@ export default ({
       .append(`circle`)
       .attrs({
         class: `mutation-circle-${d.id}`,
+        'clip-path': `url(#chart-clip)`,
         cx: (d.x * scale) + yAxisOffset + 0.5,
         cy: height - xAxisOffset - d.donors * 10,
         r: Math.max(3, d.donors / 2),
@@ -723,12 +726,6 @@ export default ({
     data.proteins.forEach((d, i) => {
       let barWidth = (d.end - Math.max(d.start, min)) * widthZoomRatio * scale
       let x = Math.max(yAxisOffset, scaleLinear(d.start))
-      let x2 = x + barWidth
-
-      if (x2 > xLength) {
-        // NOTE: this could be refactored using the chart clip path
-        barWidth -= x2 - xLength - yAxisOffset
-      }
 
       // Protein bars
 
@@ -757,7 +754,7 @@ export default ({
     // Mutations
 
     data.mutations.forEach(d => {
-      let x = Math.min(Math.max(yAxisOffset, scaleLinear(d.x)), xLength + yAxisOffset)
+      let x = scaleLinear(d.x)
 
       d3.select(`.mutation-line-${d.id}`)
         .attrs({
