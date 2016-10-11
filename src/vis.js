@@ -7,14 +7,15 @@ d3.selection.prototype.attrs = attrs
 
 // Easing
 
-let easeOutCubic = (currentIteration, startValue, changeInValue, totalIterations) =>
+type EaseOutCubic = (ci: number, sv: number, cv: number, ti: number) => number
+let easeOutCubic: EaseOutCubic = (currentIteration, startValue, changeInValue, totalIterations) =>
   changeInValue * (Math.pow(currentIteration / totalIterations - 1, 3) + 1) + startValue
 
 // Spatial
 
-type dimOb = { width: number, height: number }
-type dimFn = (width: number, height: number) => dimOb
-let dim: dimFn = (width, height) => ({ width, height })
+type DimOb = { width: number, height: number }
+type DimFn = (width: number, height: number) => DimOb
+let dim: DimFn = (width, height) => ({ width, height })
 
 // Color
 
@@ -22,7 +23,8 @@ let black = `rgb(55, 55, 55)`
 
 // data
 
-let groupByType = (type, data) => data.reduce((acc, val) => ({
+type GroupByType = (type: string, data: Array<Object>) => Object
+let groupByType: GroupByType = (type, data) => data.reduce((acc, val) => ({
   ...acc, [val[type]]: acc[val[type]] ? [...acc[val[type]], val] : [val]
 }), {})
 
@@ -37,9 +39,9 @@ export default ({
   height,
   width,
   labelSize,
-  offsetLeft = 0,
-  offsetTop = 0,
-} = {}) => {
+  offsetLeft,
+  offsetTop,
+} = {}): void => {
   // Similar to a React target element
   let root = document.querySelector(selector)
 
@@ -445,11 +447,14 @@ export default ({
       .style('font-weight', 100)
       .style('font-size', `14px`)
       .on(`click`, function () {
+        // Bail if not the checkbox above
+        if (!event.target.id.includes(`toggle-consequence`)) return
+
         let type = d3.event.target.id.split(`-`).pop()
         let checked = d3.event.target.checked
 
         consequenceFilters = checked
-          ? consequenceFilters.filter(d => d === type)
+          ? consequenceFilters.filter(d => d !== type)
           : [...consequenceFilters, type]
 
         updateStats()
