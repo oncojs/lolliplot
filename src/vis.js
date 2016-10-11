@@ -101,8 +101,7 @@ export default ({
     .attrs({
       x: yAxisOffset,
       y: 0,
-      width: width - yAxisOffset - statsBoxWidth,
-      height: height - xAxisOffset + proteinHeight,
+      ...dim(width - yAxisOffset - statsBoxWidth, height - xAxisOffset + proteinHeight),
     })
 
   // yAxis
@@ -175,6 +174,17 @@ export default ({
       stroke: `rgb(138, 138, 138)`,
       fill: `white`,
       cursor: `text`,
+    })
+
+  svg
+    .append(`g`)
+    .append(`clipPath`)
+    .attr(`id`, `minimap-clip`)
+    .append(`rect`)
+    .attrs({
+      x: yAxisOffset,
+      y: height - xAxisOffset + proteinHeight + 20,
+      ...dim(domainWidth, 50),
     })
 
   svg
@@ -590,6 +600,7 @@ export default ({
       .append(`rect`)
       .attrs({
         class: `zoom`,
+        'clip-path': `url(#minimap-clip)`,
         x: event.offsetX,
         y: height - xAxisOffset + proteinHeight + 20,
         ...dim(0, 50),
@@ -605,11 +616,15 @@ export default ({
       let difference = event.offsetX - zoomStart
       let zoom = d3.select(`.zoom`)
 
-      targetMin =
+      targetMin = Math.max(
+        0,
         (difference < 0 ? event.offsetX : +zoom.attr(`x`)) - yAxisOffset
+      )
 
-      targetMax =
+      targetMax = Math.min(
+        domainWidth,
         (difference < 0 ? event.offsetX + +zoom.attr(`width`) : event.offsetX) - yAxisOffset
+      )
 
       animating = true
       draw()
