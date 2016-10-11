@@ -446,7 +446,7 @@ export default ({
       `)
       .style('font-weight', 100)
       .style('font-size', `14px`)
-      .on(`click`, function () {
+      .on(`click`, () => {
         // Bail if not the checkbox above
         if (!event.target.id.includes(`toggle-consequence`)) return
 
@@ -493,9 +493,36 @@ export default ({
       `)
       .style('font-weight', 100)
       .style('font-size', `14px`)
+      .on(`click`, () => {
+        // Bail if not the checkbox above
+        if (!event.target.id.includes(`toggle-impacts`)) return
+
+        let type = d3.event.target.id.split(`-`).pop()
+        let checked = d3.event.target.checked
+
+        impactFilters = checked
+          ? impactFilters.filter(d => d !== type)
+          : [...impactFilters, type]
+
+        updateStats()
+
+        let selectedMutations = data.mutations.filter(x => x.impact === type)
+
+        if (!checked) {
+          selectedMutations.forEach(d => {
+            d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 0)
+            d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 0)
+          })
+        } else {
+          selectedMutations.forEach(d => {
+            d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 1)
+            d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 1)
+          })
+        }
+      })
   })
 
-  let updateStats = () => {
+  let updateStats = (): void => {
     let visibleMutations = data.mutations.filter(d =>
       (d.x > min && d.x < max) &&
       !consequenceFilters.includes(d.consequence)
@@ -506,7 +533,6 @@ export default ({
 
     Object
       .keys(consequences)
-      // .filter(type => !consequenceFilters.includes(type))
       .map(type => {
         if (!visibleConsequences[type]) {
           d3.select(`.consquence-counts-${type}`)
