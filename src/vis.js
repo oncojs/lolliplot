@@ -12,16 +12,24 @@ let easeOutCubic = (currentIteration, startValue, changeInValue, totalIterations
 
 // Spatial
 
-let dim = (width, height) => ({ width, height })
+type dimOb = { width: number, height: number }
+type dimFn = (width: number, height: number) => dimOb
+let dim: dimFn = (width, height) => ({ width, height })
 
 // Color
 
 let black = `rgb(55, 55, 55)`
 
+// data
+
+let groupByType = (type, data) => data.reduce((acc, val) => ({
+  ...acc, [val[type]]: acc[val[type]] ? [...acc[val[type]], val] : [val]
+}), {})
+
 /**
- *
  *  This is the protein viewer function.
 */
+
 export default ({
   clickHandler,
   data,
@@ -48,7 +56,8 @@ export default ({
   let max = domainWidth
   let startMin = min
   let startMax = max
-  let targetMin, targetMax
+  let targetMin = min
+  let targetMax = max
   let domain = max - min
 
   let yAxisOffset = 45
@@ -67,6 +76,9 @@ export default ({
 
   let dragging = false
   let zoomStart
+
+  let consequenceFilters = []
+  let impactFilters = []
 
   // Main Chart
 
@@ -281,7 +293,11 @@ export default ({
         cx: (d.x * scale) + yAxisOffset + 0.5,
         cy: height - xAxisOffset - d.donors * 10,
         r: Math.max(3, d.donors / 2),
-        fill: `rgb(158, 201, 121)`,
+        fill: d.impact === `high`
+          ? `rgb(194, 78, 78)`
+          : d.impact === `low`
+            ? `rgb(158, 201, 121)`
+            : `rgb(162, 162, 162)`,
       })
       .on(`mouseover`, () => {
         d3.select(`.tooltip`)
@@ -291,6 +307,7 @@ export default ({
             <div>Mutation ID: ${d.id}</div>
             <div># of Cases: ${d.donors}</div>
             <div>Amino Acid Change: Arg<b>${d.x}</b>Ter</div>
+            <div>Functional Impact: ${d.impact}</div>
           `)
       })
       .on(`mouseout`, () => {
@@ -393,52 +410,138 @@ export default ({
 
   // Stats Bar
 
-  svg
-    .append(`g`)
-    .append(`text`)
+  let stats = d3.select(`#root`)
+    .append(`div`)
+    .attr(`id`, `mutation-stats`)
+
+  stats
+    .style(`position`, `absolute`)
+    .style('top', `0px`)
+    .style('left', width - statsBoxWidth + 35 + `px`)
+    .style('line-height', `20px`)
+    .append(`div`)
     .text(`${data.mutations.length} Mutations`)
-    .attrs({
-      class: `mutation-count`,
-      x: width - statsBoxWidth + 30,
-      y: 15,
-      'font-weight': 100,
-      'font-size': `14px`
-    })
+    .attr(`class`, `mutation-count`)
+    .style('font-weight', 100)
+    .style('font-size', `16px`)
 
-  let consequences =
-    data.mutations.reduce((acc, val) => ({
-      ...acc,
-      [val.consequence]: acc[val.consequence]
-        ? [...acc[val.consequence], val]
-        : [val]
-    }), {})
+  let consequences = groupByType(`consequence`, data.mutations)
+  let impacts = groupByType(`impact`, data.mutations)
 
-    svg
-      .append(`g`)
-      .append(`text`)
-      .text(`Consequence:`)
-      .attrs({
-        class: `consquence-label`,
-        x: width - statsBoxWidth + 30,
-        y: 40,
-        'font-weight': `bold`,
-        'font-size': `12px`
+  stats
+    .append(`div`)
+    .text(`Consequence:`)
+    .attrs({ class: `consquence-label` })
+    .style('font-weight', `bold`)
+    .style('font-size', `14px`)
+
+  Object.keys(consequences).map(type => {
+    stats
+      .append(`div`)
+      .html(`
+        <input type="checkbox" id="toggle-consequence-${type}" checked="true" />
+        <span class="consquence-counts-${type}">${type}: ${consequences[type].length}</span>
+      `)
+      .style('font-weight', 100)
+      .style('font-size', `14px`)
+      .on(`click`, function () {
+        let type = d3.event.target.id.split(`-`).pop()
+        let checked = d3.event.target.checked
+
+        consequenceFilters = checked
+          ? consequenceFilters.filter(d => d === type)
+          : [...consequenceFilters, type]
+
+        updateStats()
+
+        let selectedMutations = data.mutations.filter(x => x.consequence === type)
+
+        if (!checked) {
+          selectedMutations.forEach(d => {
+            d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 0)
+            d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 0)
+          })
+        } else {
+          selectedMutations.forEach(d => {
+            d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 1)
+            d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 1)
+          })
+        }
       })
-
-  Object.keys(consequences).map((type, i) => {
-    svg
-      .append(`g`)
-      .append(`text`)
-      .text(`${type}: ${consequences[type].length}`)
-      .attrs({
-        class: `consquence-counts-${type}`,
-        x: width - statsBoxWidth + 30,
-        y: 20 * (i + 1) + 40,
-        'font-weight': 100,
-        'font-size': `12px`
-      })
-
   })
+
+  stats
+    .append(`div`)
+    .text(`Impact:`)
+    .attrs({
+      class: `consquence-label`,
+    })
+    .style('font-weight', `bold`)
+    .style('font-size', `14px`)
+
+  Object.keys(impacts).map((type, i) => {
+    stats
+      .append(`div`)
+      .html(`
+        <input type="checkbox" id="toggle-impacts-${type}" checked="true" />
+        <span class="impacts-counts-${type}">${type}: ${impacts[type].length}</span>
+      `)
+      .style('font-weight', 100)
+      .style('font-size', `14px`)
+  })
+
+  let updateStats = () => {
+    let visibleMutations = data.mutations.filter(d =>
+      (d.x > min && d.x < max) &&
+      !consequenceFilters.includes(d.consequence)
+    )
+
+    let visibleConsequences = groupByType(`consequence`, visibleMutations)
+    let visibleImpacts = groupByType(`impact`, visibleMutations)
+
+    Object
+      .keys(consequences)
+      // .filter(type => !consequenceFilters.includes(type))
+      .map(type => {
+        if (!visibleConsequences[type]) {
+          d3.select(`.consquence-counts-${type}`)
+            .text(`${type}: 0`)
+        }
+      })
+
+    Object
+      .keys(impacts)
+      .map(type => {
+        if (!visibleImpacts[type]) {
+          d3.select(`.impacts-counts-${type}`)
+            .text(`${type}: 0`)
+        }
+      })
+
+    d3.select(`.mutation-count`)
+      .text(`${visibleMutations.length} Mutations`)
+
+    Object
+      .keys(visibleConsequences)
+      .filter(type => !consequenceFilters.includes(type))
+
+      .map((type, i) => {
+        d3.select(`.consquence-counts-${type}`)
+          .text(`${type}: ${visibleConsequences[type].length}`)
+      })
+
+    Object
+      .keys(visibleImpacts)
+      .filter(type => !impactFilters.includes(type))
+      .map((type, i) => {
+        d3.select(`.impacts-counts-${type}`)
+          .text(`${type}: ${visibleImpacts[type].length}`)
+        })
+  }
+
+  /**
+   * Events
+  */
 
   let minimap = document.querySelector(`.minimap`)
   let chart = document.querySelector(`.chart`)
@@ -486,6 +589,7 @@ export default ({
       let difference = event.offsetX - zoomStart
       let zoom = d3.select(`.zoom`)
 
+      // TODO: prevent zooming beyond domain
       // if (difference + zoomStart > max + yAxisOffset) {
         // difference -= event.offsetX - yAxisOffset - max
       // }
@@ -504,6 +608,10 @@ export default ({
     animating = true
     draw()
   })
+
+  /*
+   * Animation Helpers
+  */
 
   let handleAnimationEnd = (min, max) => {
     animating = false
@@ -556,6 +664,10 @@ export default ({
       : Math.max(next, target)
   }
 
+  /*
+   * Animation Function
+  */
+
   let draw = () => {
 
     min = calculateNextCoordinate({ start: startMin, target: targetMin, currentAnimationIteration })
@@ -580,13 +692,14 @@ export default ({
     data.proteins.forEach((d, i) => {
       let barWidth = (d.end - Math.max(d.start, min)) * widthZoomRatio * scale
       let x = Math.max(yAxisOffset, scaleLinear(d.start))
-
       let x2 = x + barWidth
 
       if (x2 > xLength) {
         // NOTE: this could be refactored using the chart clip path
         barWidth -= x2 - xLength - yAxisOffset
       }
+
+      // Protein bars
 
       d3.select(`.range-${d.id}`)
         .attrs({
@@ -624,37 +737,12 @@ export default ({
       d3.select(`.mutation-circle-${d.id}`)
         .attrs({
           cx: x,
-          r: Math.max(3, d.donors / 2),
-          fill: `rgb(158, 201, 121)`,
         })
     })
 
-    // Mutation count
+    // Stats
 
-    let visibleMutations = data.mutations.filter(d => d.x > min && d.x < max)
-
-    let visibleConsequences =
-      visibleMutations.reduce((acc, val) => ({
-        ...acc,
-        [val.consequence]: acc[val.consequence]
-        ? [...acc[val.consequence], val]
-        : [val]
-      }), {})
-
-    Object.keys(consequences).map(type => {
-      if (!visibleConsequences[type]) {
-        d3.select(`.consquence-counts-${type}`)
-          .text(`${type}: 0`)
-      }
-    })
-
-    d3.select(`.mutation-count`)
-      .text(`${visibleMutations.length} Mutations`)
-
-    Object.keys(visibleConsequences).map((type, i) => {
-      d3.select(`.consquence-counts-${type}`)
-        .text(`${type}: ${visibleConsequences[type].length}`)
-    })
+    updateStats()
 
     // Minimap zoom area
 

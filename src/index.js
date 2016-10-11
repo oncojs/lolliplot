@@ -33,8 +33,12 @@ let data = {
       id: `MU${i}`,
       donors: Math.round((i * Math.random() / 6) % 20),
       x: (i * Date.now()) % 500,
-      consequence: `type-${(i % 4) + 1
-      }`,
+      consequence: `type_${(i % 4) + 1}`,
+      impact:  Math.random() * 10 < 3.33
+        ? `high`
+        : Math.random() * 10 > 6.66
+          ? `low` : `unknown`
+
     })).filter(x => x.donors > 0))
   ],
 }
