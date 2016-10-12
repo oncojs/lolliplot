@@ -492,14 +492,14 @@ export default ({
     stats
       .append(`div`)
       .html(`
-        <input type="checkbox" id="toggle-consequence-${type}" checked="true" />
+        <input type="checkbox" id="toggle-consequence-${type}" class="mutation-filter" checked="true" />
         <span class="consquence-counts-${type}">${type}: ${consequences[type].length}</span>
       `)
       .style('font-weight', 100)
       .style('font-size', `14px`)
       .on(`click`, () => {
         // Bail if not the checkbox above
-        if (!event.target.id.includes(`toggle-consequence`)) return
+        if (!d3.event.target.id.includes(`toggle-consequence`)) return
 
         let type = d3.event.target.id.split(`-`).pop()
         let checked = d3.event.target.checked
@@ -539,14 +539,14 @@ export default ({
     stats
       .append(`div`)
       .html(`
-        <input type="checkbox" id="toggle-impacts-${type}" checked="true" />
+        <input type="checkbox" id="toggle-impacts-${type}" class="mutation-filter" checked="true" />
         <span class="impacts-counts-${type}">${type}: ${impacts[type].length}</span>
       `)
       .style('font-weight', 100)
       .style('font-size', `14px`)
       .on(`click`, () => {
         // Bail if not the checkbox above
-        if (!event.target.id.includes(`toggle-impacts`)) return
+        if (!d3.event.target.id.includes(`toggle-impacts`)) return
 
         let type = d3.event.target.id.split(`-`).pop()
         let checked = d3.event.target.checked
@@ -753,6 +753,10 @@ export default ({
     targetMin = 0
     targetMax = domainWidth
     animating = true
+    consequenceFilters = []
+    impactFilters = []
+    d3.selectAll(`.mutation-filter`).property(`checked`, true)
+    updateStats()
     draw()
   })
 
