@@ -639,15 +639,17 @@ export default ({
     return [targetMin, targetMax]
   }
 
-  let updateTargetMinimapZoom = ({ zoomX, offsetX, difference }) => {
+  let updateTargetMinimapZoom = ({ zoomX, offsetX, difference, width }) => {
+    let draggingLeft = difference < 0
+
     let targetMin = Math.max(
       0,
-      (difference < 0 ? offsetX : zoomX) - yAxisOffset
+      (draggingLeft ? offsetX : zoomX) - yAxisOffset
     )
 
     let targetMax = Math.min(
       domainWidth,
-      (difference < 0 ? offsetX + zoomX : offsetX) - yAxisOffset
+      (draggingLeft ? offsetX - yAxisOffset + width : offsetX - yAxisOffset)
     )
 
     return [targetMin, targetMax]
@@ -709,7 +711,7 @@ export default ({
           updateTargetChartZoom({ zoomX: +zoom.attr(`x`), offsetX: event.offsetX, difference })
       } else {
         ;[targetMin, targetMax] =
-          updateTargetMinimapZoom({ zoomX: +zoom.attr(`x`), offsetX: event.offsetX, difference })
+          updateTargetMinimapZoom({ zoomX: +zoom.attr(`x`), width: +zoom.attr(`width`), offsetX: event.offsetX, difference })
       }
 
       if (targetMin === targetMax) targetMax++ // at least one coordinate zoom
