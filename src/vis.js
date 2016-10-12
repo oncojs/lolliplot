@@ -5,6 +5,8 @@ import attrs from './attrs'
 
 d3.selection.prototype.attrs = attrs
 
+window.d3 = d3
+
 // Easing
 
 type EaseOutCubic = (ci: number, sv: number, cv: number, ti: number) => number
@@ -17,11 +19,13 @@ type DimOb = { width: number, height: number }
 type DimFn = (width: number, height: number) => DimOb
 let dim: DimFn = (width, height) => ({ width, height })
 
+let halfPixel = 0.5
+
 // Color
 
 let black = `rgb(55, 55, 55)`
 
-// data
+// Data
 
 type GroupByType = (type: string, data: Array<Object>) => Object
 let groupByType: GroupByType = (type, data) => data.reduce((acc, val) => ({
@@ -104,6 +108,18 @@ export default ({
       ...dim(width - yAxisOffset - statsBoxWidth, height - xAxisOffset + proteinHeight),
     })
 
+  // Chart zoom area
+
+  d3.select(`.chart`)
+    .append(`rect`)
+    .attrs({
+      class: `chart-zoom-area`,
+      x: yAxisOffset,
+      y: 0,
+      ...dim(width - yAxisOffset - statsBoxWidth, height - xAxisOffset),
+      fill: `white`,
+    })
+
   // yAxis
 
   svg
@@ -154,12 +170,11 @@ export default ({
     .attrs({
       class: `xAxisBottom`,
       x1: yAxisOffset,
-      y1: height - xAxisOffset + proteinHeight + 0.5,
+      y1: height - xAxisOffset + proteinHeight + halfPixel,
       x2: width - statsBoxWidth,
-      y2: height - xAxisOffset + proteinHeight + 0.5,
+      y2: height - xAxisOffset + proteinHeight + halfPixel,
       stroke: black,
     })
-
 
   // Minimap
 
@@ -192,11 +207,34 @@ export default ({
     .append(`rect`)
     .attrs({
       class: `minimap-zoom-area`,
-      x: yAxisOffset + 0.5,
-      y: height - xAxisOffset + proteinHeight + 20 + 0.5,
-      ...dim(domainWidth - 1, 50 - 1),
+      x: yAxisOffset + halfPixel,
+      y: height - xAxisOffset + proteinHeight + 20 + halfPixel,
+      ...dim(domainWidth - 1, 40 - 1),
       fill: `rgba(162, 255, 196, 0.88)`,
       'pointer-events': `none`,
+    })
+
+  svg
+    .append(`g`)
+    .append(`text`)
+    .text(`Select an area below to zoom the chart`)
+    .attrs({
+      class: `minimap-label`,
+      x: yAxisOffset,
+      y: height - xAxisOffset + proteinHeight + 15,
+      'font-size': `11px`,
+    })
+
+  svg
+    .append(`g`)
+    .append(`line`)
+    .attrs({
+      class: `minimap-protein-mutation-divider`,
+      x1: yAxisOffset,
+      y1: height - xAxisOffset + proteinHeight + 60 - halfPixel,
+      x2: domainWidth + yAxisOffset,
+      y2: height - xAxisOffset + proteinHeight + 60 - halfPixel,
+      stroke: black,
     })
 
   // Proteins
@@ -207,9 +245,9 @@ export default ({
       .attrs({
         'clip-path': `url(#chart-clip)`,
         class: `range-${d.id}`,
-        x: (d.start * scale) + yAxisOffset + 0.5,
-        y: height - xAxisOffset + 0.5,
-        ...dim(((d.end - d.start) * scale) - 1, proteinHeight - 0.5),
+        x: (d.start * scale) + yAxisOffset + halfPixel,
+        y: height - xAxisOffset + halfPixel,
+        ...dim(((d.end - d.start) * scale) - 1, proteinHeight - halfPixel),
         fill: `hsl(${i * 100}, 80%, 90%)`,
       })
       .on(`mouseover`, function() {
@@ -266,7 +304,7 @@ export default ({
         class: `domain-${d.id}`,
         x: d.start + yAxisOffset,
         y: height - xAxisOffset + proteinHeight + 60,
-        ...dim(d.end - d.start, 10),
+        ...dim(d.end - d.start, 10 - halfPixel),
         fill: `hsl(${i * 100}, 80%, 70%)`,
         'pointer-events': `none`,
       })
@@ -293,9 +331,9 @@ export default ({
       .attrs({
         class: `mutation-line-${d.id}`,
         'clip-path': `url(#chart-clip)`,
-        x1: (d.x * scale) + yAxisOffset + 0.5,
+        x1: (d.x * scale) + yAxisOffset + halfPixel,
         y1: height - xAxisOffset,
-        x2: (d.x * scale) + yAxisOffset + 0.5,
+        x2: (d.x * scale) + yAxisOffset + halfPixel,
         y2: height - xAxisOffset - d.donors * 10,
         stroke: black,
       })
@@ -305,7 +343,7 @@ export default ({
       .attrs({
         class: `mutation-circle-${d.id}`,
         'clip-path': `url(#chart-clip)`,
-        cx: (d.x * scale) + yAxisOffset + 0.5,
+        cx: (d.x * scale) + yAxisOffset + halfPixel,
         cy: height - xAxisOffset - d.donors * 10,
         r: Math.max(3, d.donors / 2),
         fill: d.impact === `high`
@@ -336,9 +374,9 @@ export default ({
       .attrs({
         class: `mutation-line-${d.id}`,
         x1: d.x + yAxisOffset,
-        y1: height - xAxisOffset + proteinHeight + 70,
-        x2: d.x + yAxisOffset + 0.5,
-        y2: height - xAxisOffset + proteinHeight - (d.donors * 2) + 70,
+        y1: height - xAxisOffset + proteinHeight + 60,
+        x2: d.x + yAxisOffset + halfPixel,
+        y2: height - xAxisOffset + proteinHeight - (d.donors * 1.5) + 60,
         stroke: black,
         'pointer-events': `none`,
       })
@@ -538,29 +576,26 @@ export default ({
   let updateStats = (): void => {
     let visibleMutations = data.mutations.filter(d =>
       (d.x > min && d.x < max) &&
-      !consequenceFilters.includes(d.consequence)
+      !consequenceFilters.includes(d.consequence) &&
+      !impactFilters.includes(d.impact)
     )
 
     let visibleConsequences = groupByType(`consequence`, visibleMutations)
     let visibleImpacts = groupByType(`impact`, visibleMutations)
 
-    Object
-      .keys(consequences)
-      .map(type => {
-        if (!visibleConsequences[type]) {
-          d3.select(`.consquence-counts-${type}`)
-            .text(`${type}: 0`)
-        }
-      })
+    Object.keys(consequences).map(type => {
+      if (!visibleConsequences[type]) {
+        d3.select(`.consquence-counts-${type}`)
+          .text(`${type}: 0`)
+      }
+    })
 
-    Object
-      .keys(impacts)
-      .map(type => {
-        if (!visibleImpacts[type]) {
-          d3.select(`.impacts-counts-${type}`)
-            .text(`${type}: 0`)
-        }
-      })
+    Object.keys(impacts).map(type => {
+      if (!visibleImpacts[type]) {
+        d3.select(`.impacts-counts-${type}`)
+          .text(`${type}: 0`)
+      }
+    })
 
     d3.select(`.mutation-count`)
       .text(`${visibleMutations.length} Mutations`)
@@ -568,7 +603,6 @@ export default ({
     Object
       .keys(visibleConsequences)
       .filter(type => !consequenceFilters.includes(type))
-
       .map((type, i) => {
         d3.select(`.consquence-counts-${type}`)
           .text(`${type}: ${visibleConsequences[type].length}`)
@@ -587,8 +621,41 @@ export default ({
    * Events
   */
 
+  let updateTargetChartZoom = ({ zoomX, offsetX, difference }) => {
+    let scale = d3.scaleLinear()
+      .domain([0, width - yAxisOffset - statsBoxWidth])
+      .range([min, max])
+
+    let targetMin = Math.max(
+      0,
+      (difference < 0 ? scale(offsetX) : scale(zoomX - yAxisOffset))
+    )
+
+    let targetMax = Math.min(
+      domainWidth,
+      (difference < 0 ? scale(offsetX + zoomX) : scale(offsetX - yAxisOffset))
+    )
+
+    return [targetMin, targetMax]
+  }
+
+  let updateTargetMinimapZoom = ({ zoomX, offsetX, difference }) => {
+    let targetMin = Math.max(
+      0,
+      (difference < 0 ? offsetX : zoomX) - yAxisOffset
+    )
+
+    let targetMax = Math.min(
+      domainWidth,
+      (difference < 0 ? offsetX + zoomX : offsetX) - yAxisOffset
+    )
+
+    return [targetMin, targetMax]
+  }
+
   let minimap = document.querySelector(`.minimap`)
   let chart = document.querySelector(`.chart`)
+  let chartZoomArea = document.querySelector(`.chart-zoom-area`)
   let resetBtn = document.querySelector(`#reset`)
 
   minimap.addEventListener(`mousedown`, event => {
@@ -599,13 +666,33 @@ export default ({
       .append(`g`)
       .append(`rect`)
       .attrs({
-        class: `zoom`,
+        class: `minimap-zoom`,
         'clip-path': `url(#minimap-clip)`,
         x: event.offsetX,
         y: height - xAxisOffset + proteinHeight + 20,
         ...dim(0, 50),
         fill: `rgba(83, 215, 88, 0.51)`,
         cursor: `text`,
+        'pointer-events': `none`,
+      })
+  })
+
+  chartZoomArea.addEventListener(`mousedown`, event => {
+    dragging = true
+    zoomStart = event.offsetX
+
+    svg
+      .append(`g`)
+      .append(`rect`)
+      .attrs({
+        class: `chart-zoom`,
+        'clip-path': `url(#chart-clip)`,
+        x: event.offsetX,
+        y: 0,
+        ...dim(0, height - xAxisOffset),
+        fill: `rgba(214, 214, 214, 0.51)`,
+        cursor: `text`,
+        'pointer-events': `none`,
       })
   })
 
@@ -614,17 +701,18 @@ export default ({
       dragging = false
 
       let difference = event.offsetX - zoomStart
-      let zoom = d3.select(`.zoom`)
+      let zoom = d3.select(`.minimap-zoom`)
 
-      targetMin = Math.max(
-        0,
-        (difference < 0 ? event.offsetX : +zoom.attr(`x`)) - yAxisOffset
-      )
+      if (zoom.empty()) {
+        zoom = d3.select(`.chart-zoom`)
+        ;[targetMin, targetMax] =
+          updateTargetChartZoom({ zoomX: +zoom.attr(`x`), offsetX: event.offsetX, difference })
+      } else {
+        ;[targetMin, targetMax] =
+          updateTargetMinimapZoom({ zoomX: +zoom.attr(`x`), offsetX: event.offsetX, difference })
+      }
 
-      targetMax = Math.min(
-        domainWidth,
-        (difference < 0 ? event.offsetX + +zoom.attr(`width`) : event.offsetX) - yAxisOffset
-      )
+      if (targetMin === targetMax) targetMax++ // at least one coordinate zoom
 
       animating = true
       draw()
@@ -636,12 +724,20 @@ export default ({
   chart.addEventListener(`mousemove`, event => {
     if (dragging) {
       let difference = event.offsetX - zoomStart
-      let zoom = d3.select(`.zoom`)
+      let zoom = d3.select(`.minimap-zoom`)
 
-      // TODO: prevent zooming beyond domain
-      // if (difference + zoomStart > max + yAxisOffset) {
-        // difference -= event.offsetX - yAxisOffset - max
-      // }
+      zoom.attr(`width`, Math.abs(difference))
+
+      if (difference < 0) {
+        zoom.attr(`x`, event.offsetX)
+      }
+    }
+  })
+
+  chartZoomArea.addEventListener(`mousemove`, event => {
+    if (dragging) {
+      let difference = event.offsetX - zoomStart
+      let zoom = d3.select(`.chart-zoom`)
 
       zoom.attr(`width`, Math.abs(difference))
 
@@ -740,22 +836,24 @@ export default ({
 
     data.proteins.forEach((d, i) => {
       let barWidth = (d.end - Math.max(d.start, min)) * widthZoomRatio * scale
-      let x = Math.max(yAxisOffset, scaleLinear(d.start))
+      let x = scaleLinear(d.start)
 
       // Protein bars
 
       d3.select(`.range-${d.id}`)
         .attrs({
-          x: x + 0.5,
-          y: height - xAxisOffset + 0.5,
-          ...dim(Math.max(0, barWidth - 1), proteinHeight - 0.5),
+          x:  Math.max(yAxisOffset, x) + halfPixel,
+          y: height - xAxisOffset + halfPixel,
+          ...dim(Math.max(0, barWidth - 1), proteinHeight - halfPixel),
           fill: `hsl(${i * 100}, 80%, 90%)`,
         })
 
       // Protein names
 
       d3.select(`.protein-name-${d.id}`)
-        .attrs({ x }) // TODO: if offscreen, don't hug left edge
+        .attrs({
+          x: barWidth + yAxisOffset < yAxisOffset ? x : Math.max(yAxisOffset, x)
+        })
     })
 
     // Horizontal ticks
@@ -791,8 +889,8 @@ export default ({
 
     d3.select(`.minimap-zoom-area`)
       .attrs({
-        x: min + yAxisOffset + 0.5,
-        width: max - min - 1,
+        x: min + yAxisOffset + halfPixel,
+        width: Math.max(1, max - min - 1),
       })
 
     if (animating) requestAnimationFrame(draw)
