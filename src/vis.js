@@ -217,7 +217,7 @@ export default ({
   svg
     .append(`g`)
     .append(`text`)
-    .text(`Select an area to zoom the chart`)
+    .text(`Click and drag over an area, or select a protein to zoom the chart`)
     .attrs({
       class: `minimap-label`,
       x: yAxisOffset,
@@ -621,25 +621,27 @@ export default ({
    * Events
   */
 
-  let updateTargetChartZoom = ({ zoomX, offsetX, difference }) => {
+  let updateTargetChartZoom = ({ zoomX, zoomWidth, offsetX, difference }) => {
+    let draggingLeft = difference < 0
+
     let scale = d3.scaleLinear()
       .domain([0, width - yAxisOffset - statsBoxWidth])
       .range([min, max])
 
     let targetMin = Math.max(
       0,
-      (difference < 0 ? scale(offsetX) : scale(zoomX - yAxisOffset))
+      (draggingLeft ? scale(offsetX - yAxisOffset) : scale(zoomX - yAxisOffset))
     )
 
     let targetMax = Math.min(
       domainWidth,
-      (difference < 0 ? scale(offsetX + zoomX) : scale(offsetX - yAxisOffset))
+      (draggingLeft ? scale(offsetX + zoomWidth - yAxisOffset) : scale(offsetX - yAxisOffset))
     )
 
     return [targetMin, targetMax]
   }
 
-  let updateTargetMinimapZoom = ({ zoomX, offsetX, difference, width }) => {
+  let updateTargetMinimapZoom = ({ zoomX, zoomWidth, offsetX, difference }) => {
     let draggingLeft = difference < 0
 
     let targetMin = Math.max(
@@ -649,7 +651,7 @@ export default ({
 
     let targetMax = Math.min(
       domainWidth,
-      (draggingLeft ? offsetX - yAxisOffset + width : offsetX - yAxisOffset)
+      (draggingLeft ? offsetX - yAxisOffset + zoomWidth : offsetX - yAxisOffset)
     )
 
     return [targetMin, targetMax]
@@ -708,10 +710,10 @@ export default ({
       if (zoom.empty()) {
         zoom = d3.select(`.chart-zoom`)
         ;[targetMin, targetMax] =
-          updateTargetChartZoom({ zoomX: +zoom.attr(`x`), offsetX: event.offsetX, difference })
+          updateTargetChartZoom({ zoomX: +zoom.attr(`x`), zoomWidth: +zoom.attr(`width`), offsetX: event.offsetX, difference })
       } else {
         ;[targetMin, targetMax] =
-          updateTargetMinimapZoom({ zoomX: +zoom.attr(`x`), width: +zoom.attr(`width`), offsetX: event.offsetX, difference })
+          updateTargetMinimapZoom({ zoomX: +zoom.attr(`x`), zoomWidth: +zoom.attr(`width`), offsetX: event.offsetX, difference })
       }
 
       if (targetMin === targetMax) targetMax++ // at least one coordinate zoom
