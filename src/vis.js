@@ -325,48 +325,57 @@ export default ({
 
   // Mutations
 
+
+  let mutationChartLines = d3.select(`.chart`)
+    .append(`g`)
+    .selectAll(`line`)
+    .data(data.mutations)
+    .enter()
+    .append(`line`)
+    .attrs({
+      class: d => `mutation-line-${d.id}`,
+      'clip-path': `url(#chart-clip)`,
+      x1: d => (d.x * scale) + yAxisOffset + halfPixel,
+      y1: height - xAxisOffset,
+      x2: d => (d.x * scale) + yAxisOffset + halfPixel,
+      y2: d => height - xAxisOffset - d.donors * 10,
+      stroke: black,
+    })
+
+  let mutationChartCircles = d3.select(`.chart`)
+    .append(`g`)
+    .selectAll(`circle`)
+    .data(data.mutations)
+    .enter()
+    .append(`circle`)
+    .attrs({
+      class: d => `mutation-circle-${d.id}`,
+      'clip-path': `url(#chart-clip)`,
+      cx: d => (d.x * scale) + yAxisOffset + halfPixel,
+      cy: d => height - xAxisOffset - d.donors * 10,
+      r: d => Math.max(3, d.donors / 2),
+      fill: d => d.impact === `high`
+        ? `rgb(194, 78, 78)`
+        : d.impact === `low`
+          ? `rgb(158, 201, 121)`
+          : `rgb(162, 162, 162)`,
+    })
+    .on(`mouseover`, d => {
+      d3.select(`.tooltip`)
+        .style(`left`, d3.event.clientX + 20 + `px`)
+        .style(`top`, d3.event.clientY - 22 + `px`)
+        .html(`
+          <div>Mutation ID: ${d.id}</div>
+          <div># of Cases: ${d.donors}</div>
+          <div>Amino Acid Change: Arg<b>${d.x}</b>Ter</div>
+          <div>Functional Impact: ${d.impact}</div>
+        `)
+    })
+    .on(`mouseout`, () => {
+      d3.select(`.tooltip`).style(`left`, `-9999px`)
+    })
+
   data.mutations.forEach(d => {
-    d3.select(`.chart`)
-      .append(`line`)
-      .attrs({
-        class: `mutation-line-${d.id}`,
-        'clip-path': `url(#chart-clip)`,
-        x1: (d.x * scale) + yAxisOffset + halfPixel,
-        y1: height - xAxisOffset,
-        x2: (d.x * scale) + yAxisOffset + halfPixel,
-        y2: height - xAxisOffset - d.donors * 10,
-        stroke: black,
-      })
-
-    d3.select(`.chart`)
-      .append(`circle`)
-      .attrs({
-        class: `mutation-circle-${d.id}`,
-        'clip-path': `url(#chart-clip)`,
-        cx: (d.x * scale) + yAxisOffset + halfPixel,
-        cy: height - xAxisOffset - d.donors * 10,
-        r: Math.max(3, d.donors / 2),
-        fill: d.impact === `high`
-          ? `rgb(194, 78, 78)`
-          : d.impact === `low`
-            ? `rgb(158, 201, 121)`
-            : `rgb(162, 162, 162)`,
-      })
-      .on(`mouseover`, () => {
-        d3.select(`.tooltip`)
-          .style(`left`, d3.event.clientX + 20 + `px`)
-          .style(`top`, d3.event.clientY - 22 + `px`)
-          .html(`
-            <div>Mutation ID: ${d.id}</div>
-            <div># of Cases: ${d.donors}</div>
-            <div>Amino Acid Change: Arg<b>${d.x}</b>Ter</div>
-            <div>Functional Impact: ${d.impact}</div>
-          `)
-      })
-      .on(`mouseout`, () => {
-        d3.select(`.tooltip`).style(`left`, `-9999px`)
-      })
-
     // Mutation lines on minimap
 
     d3.select(`.chart`)
@@ -873,21 +882,12 @@ export default ({
     }
 
     // Mutations
+    mutationChartLines
+      .attr(`x1`, d => scaleLinear(d.x))
+      .attr(`x2`, d => scaleLinear(d.x))
 
-    data.mutations.forEach(d => {
-      let x = scaleLinear(d.x)
-
-      d3.select(`.mutation-line-${d.id}`)
-        .attrs({
-          x1: x,
-          x2: x,
-        })
-
-      d3.select(`.mutation-circle-${d.id}`)
-        .attrs({
-          cx: x,
-        })
-    })
+    mutationChartCircles
+      .attr(`cx`, d => scaleLinear(d.x))
 
     // Stats
 
