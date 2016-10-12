@@ -1,1 +1,46 @@
-{"name": "get_started", "scripts": {"flow": "flow; test $? -eq 0 -o $? -eq 2"}}
+{
+  "name": "protein-viewer",
+  "version": "0.1.0",
+  "description": "A protein viewer built with d3",
+  "scripts": {
+    "start": "node server.js",
+    "lint": "eslint src",
+    "build": "webpack -p --config webpack.dist.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NCI-GDC/protein-viewe"
+  },
+  "keywords": [
+    "d3",
+    "react",
+    "reactjs",
+    "boilerplate",
+    "hot",
+    "reload",
+    "hmr",
+    "live",
+    "edit",
+    "webpack"
+  ],
+  "author": "alex-wilmer",
+  "devDependencies": {
+    "babel-core": "^6.0.20",
+    "babel-eslint": "^4.1.3",
+    "babel-loader": "^6.0.1",
+    "babel-preset-es2015": "^6.0.15",
+    "babel-preset-react": "^6.0.15",
+    "babel-preset-stage-0": "^6.0.15",
+    "eslint": "^1.10.3",
+    "eslint-plugin-react": "^3.6.2",
+    "react-hot-loader": "^3.0.0-beta.1",
+    "webpack": "^1.13.2",
+    "webpack-dev-server": "^1.16.1"
+  },
+  "dependencies": {
+    "d3": "^4.2.3",
+    "d3-selection-multi": "^1.0.0",
+    "react": "^15.0.1",
+    "react-dom": "^15.0.1"
+  }
+}

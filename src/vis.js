@@ -217,7 +217,7 @@ export default ({
   svg
     .append(`g`)
     .append(`text`)
-    .text(`Select an area below to zoom the chart`)
+    .text(`Select an area to zoom the chart`)
     .attrs({
       class: `minimap-label`,
       x: yAxisOffset,
