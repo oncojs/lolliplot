@@ -2,10 +2,10 @@
 import 'babel-polyfill'
 import vis from './vis'
 
-let data = {
+let data = mutations => ({
   proteins: [
     {
-      id: `TAS`,
+      id: `TAD`,
       start: 0,
       end: 75,
       description: `von Hippel-Lindau disease tumour suppressor, beta/alpha domain`,
@@ -23,16 +23,16 @@ let data = {
       description: `von Hippel-Lindau disease tumour suppressor, beta/alpha domain`,
     },
     {
-      id: `zzz`,
+      id: `NLS`,
       start: 450,
       end: 500,
       description: `von Hippel-Lindau disease tumour suppressor, beta/alpha domain`,
     },
   ],
   mutations: [
-    ...(Array(200).fill(1).map((x, i) => ({
+    ...(Array(mutations).fill(1).map((x, i) => ({
       id: `MU${i}`,
-      donors: Math.round((i * Math.random() / 10) % 20),
+      donors: Math.round((i * Math.random() / 2) % 20),
       x: (i * Date.now()) % 500,
       consequence: `type_${(i % 4) + 1}`,
       impact:  Math.random() * 10 < 3.33
@@ -42,12 +42,30 @@ let data = {
 
     })).filter(x => x.donors > 0))
   ],
-}
+})
 
-// index file
 vis({
   selector: `#root`,
-  data,
+  data: data(80),
   clickHandler: d => console.dir(d),
   height: 450,
 })
+
+/*----------------------------------------------------------------------------*/
+
+let range = document.querySelector(`#mut-count`)
+let label = document.querySelector(`#mut-count-label`)
+let root = document.querySelector(`#root`)
+
+window.range = range
+
+range.oninput = event => {
+  root.innerHTML = ''
+  label.innerText = event.target.value
+  vis({
+    selector: `#root`,
+    data: data(+event.target.value),
+    clickHandler: d => console.dir(d),
+    height: 450,
+  })
+}

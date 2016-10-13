@@ -47,6 +47,9 @@
         border-top: 8px solid transparent;
         border-bottom: 8px solid transparent;
       }
+      #mut-count {
+        width: 500px;
+      }
   </style>
   </head>
   <body>
@@ -63,6 +66,10 @@
       </div>
       <div id="root"></div>
       <div class="tooltip"></div>
+      <div>
+        <h4># Mutations: <span id="mut-count-label">80</span></h4>
+        <input type="range" id="mut-count" value="80" min="0" max="500" />
+      </div>
     </div>
     <script src="/static/bundle.js"></script>
   </body>

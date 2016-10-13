@@ -106,7 +106,7 @@ export default ({
     .attrs({
       x: yAxisOffset,
       y: 0,
-      ...dim(width - yAxisOffset - statsBoxWidth, height - xAxisOffset + proteinHeight),
+      ...dim(xAxisLength, height - xAxisOffset + proteinHeight),
     })
 
   // Chart zoom area
@@ -117,7 +117,7 @@ export default ({
       class: `chart-zoom-area`,
       x: yAxisOffset,
       y: 0,
-      ...dim(width - yAxisOffset - statsBoxWidth, height - xAxisOffset),
+      ...dim(xAxisLength, height - xAxisOffset),
       fill: `white`,
     })
 
@@ -186,7 +186,7 @@ export default ({
       class: `minimap`,
       x: yAxisOffset,
       y: height - xAxisOffset + proteinHeight + 20,
-      ...dim(domainWidth, 50),
+      ...dim(xAxisLength, 50),
       stroke: `rgb(138, 138, 138)`,
       fill: `white`,
       cursor: `text`,
@@ -200,7 +200,7 @@ export default ({
     .attrs({
       x: yAxisOffset,
       y: height - xAxisOffset + proteinHeight + 20,
-      ...dim(domainWidth, 50),
+      ...dim(xAxisLength, 50),
     })
 
   svg
@@ -210,7 +210,7 @@ export default ({
       class: `minimap-zoom-area`,
       x: yAxisOffset + halfPixel,
       y: height - xAxisOffset + proteinHeight + 20 + halfPixel,
-      ...dim(domainWidth - 1, 40 - 1),
+      ...dim(xAxisLength - 1, 40 - 1),
       fill: `rgba(162, 255, 196, 0.88)`,
       'pointer-events': `none`,
     })
@@ -233,7 +233,7 @@ export default ({
       class: `minimap-protein-mutation-divider`,
       x1: yAxisOffset,
       y1: height - xAxisOffset + proteinHeight + 60 - halfPixel,
-      x2: domainWidth + yAxisOffset,
+      x2: xAxisLength + yAxisOffset,
       y2: height - xAxisOffset + proteinHeight + 60 - halfPixel,
       stroke: black,
     })
@@ -303,9 +303,9 @@ export default ({
       .append(`rect`)
       .attrs({
         class: `domain-${d.id}`,
-        x: d.start + yAxisOffset,
+        x: (d.start * scale) + yAxisOffset,
         y: height - xAxisOffset + proteinHeight + 60,
-        ...dim(d.end - d.start, 10 - halfPixel),
+        ...dim(((d.end - d.start) * scale), 10 - halfPixel),
         fill: `hsl(${i * 100}, 80%, 70%)`,
         'pointer-events': `none`,
       })
@@ -325,7 +325,6 @@ export default ({
     })
 
   // Mutations
-
 
   let mutationChartLines = d3.select(`.chart`)
     .append(`g`)
@@ -383,9 +382,9 @@ export default ({
       .append(`line`)
       .attrs({
         class: `mutation-line-${d.id}`,
-        x1: d.x + yAxisOffset,
+        x1: (d.x * scale) + yAxisOffset,
         y1: height - xAxisOffset + proteinHeight + 60,
-        x2: d.x + yAxisOffset + halfPixel,
+        x2: (d.x * scale) + yAxisOffset + halfPixel,
         y2: height - xAxisOffset + proteinHeight - (d.donors * 1.5) + 60,
         stroke: black,
         'pointer-events': `none`,
@@ -635,7 +634,7 @@ export default ({
     let draggingLeft = difference < 0
 
     let scale = d3.scaleLinear()
-      .domain([0, width - yAxisOffset - statsBoxWidth])
+      .domain([0, xAxisLength])
       .range([min, max])
 
     let targetMin = Math.max(
@@ -656,12 +655,12 @@ export default ({
 
     let targetMin = Math.max(
       0,
-      (draggingLeft ? offsetX : zoomX) - yAxisOffset
+      (draggingLeft ? (offsetX - yAxisOffset) / scale : (zoomX - yAxisOffset) / scale)
     )
 
     let targetMax = Math.min(
       domainWidth,
-      (draggingLeft ? offsetX - yAxisOffset + zoomWidth : offsetX - yAxisOffset)
+      (draggingLeft ? (offsetX - yAxisOffset + zoomWidth) / scale : (offsetX - yAxisOffset) / scale)
     )
 
     return [targetMin, targetMax]
@@ -785,35 +784,24 @@ export default ({
 
   let shouldAnimationFinish = ({ startMin, targetMin, startMax, targetMax, min, max }) => {
     if (
-      (startMin <= targetMin && startMax <= targetMax) &&
-      (min >= targetMin && max >= targetMax)
+      (
+        (startMin <= targetMin && startMax <= targetMax) &&
+        (min >= targetMin && max >= targetMax)
+      ) ||
+      (
+        (startMin <= targetMin && startMax >= targetMax) &&
+        (min >= targetMin && max <= targetMax)
+      ) ||
+      (
+        (startMin >= targetMin && startMax >= targetMax) &&
+        (min <= targetMin && max <= targetMax)
+      ) ||
+      (
+        (startMin >= targetMin && startMax <= targetMax) &&
+        (min <= targetMin && max >= targetMax)
+      )
     ) {
       handleAnimationEnd(min, max)
-      return
-    }
-
-    if (
-      (startMin <= targetMin && startMax >= targetMax) &&
-      (min >= targetMin && max <= targetMax)
-    ) {
-      handleAnimationEnd(min, max)
-      return
-    }
-
-    if (
-      (startMin >= targetMin && startMax >= targetMax) &&
-      (min <= targetMin && max <= targetMax)
-    ) {
-      handleAnimationEnd(min, max)
-      return
-    }
-
-    if (
-      (startMin >= targetMin && startMax <= targetMax) &&
-      (min <= targetMin && max >= targetMax)
-    ) {
-      handleAnimationEnd(min, max)
-      return
     }
   }
 
@@ -842,7 +830,7 @@ export default ({
 
     domain = max - min
 
-    let xLength = width - yAxisOffset - statsBoxWidth
+    let xLength = xAxisLength
 
     let scaleLinear = d3.scaleLinear()
       .domain([min, max])
@@ -898,8 +886,8 @@ export default ({
 
     d3.select(`.minimap-zoom-area`)
       .attrs({
-        x: min + yAxisOffset + halfPixel,
-        width: Math.max(1, max - min - 1),
+        x: (min * scale) + yAxisOffset + halfPixel,
+        width: Math.max(1, ((max - min) * scale) - 1),
       })
 
     if (animating) requestAnimationFrame(draw)
