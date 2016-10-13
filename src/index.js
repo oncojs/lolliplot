@@ -1,4 +1,5 @@
 
+import 'babel-polyfill'
 import vis from './vis'
 
 let data = {

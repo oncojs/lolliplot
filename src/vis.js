@@ -1,5 +1,6 @@
 // @flow
 
+import 'babel-polyfill'
 import * as d3 from 'd3'
 import attrs from './attrs'
 
