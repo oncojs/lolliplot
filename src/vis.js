@@ -518,20 +518,7 @@ export default ({
           : [...consequenceFilters, type]
 
         updateStats()
-
-        let selectedMutations = data.mutations.filter(x => x.consequence === type)
-
-        if (!checked) {
-          selectedMutations.forEach(d => {
-            d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 0)
-            d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 0)
-          })
-        } else {
-          selectedMutations.forEach(d => {
-            d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 1)
-            d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 1)
-          })
-        }
+        filterMutations(checked, `consequence`, type)
       })
   })
 
@@ -565,22 +552,27 @@ export default ({
           : [...impactFilters, type]
 
         updateStats()
-
-        let selectedMutations = data.mutations.filter(x => x.impact === type)
-
-        if (!checked) {
-          selectedMutations.forEach(d => {
-            d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 0)
-            d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 0)
-          })
-        } else {
-          selectedMutations.forEach(d => {
-            d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 1)
-            d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 1)
-          })
-        }
+        filterMutations(checked, `impact`, type)
       })
   })
+
+  let filterMutations = (checked, mutationClass, type) => {
+    let selectedMutations = mutationClass
+      ? data.mutations.filter(x => x[mutationClass] === type)
+      : data.mutations.slice()
+
+    if (!checked) {
+      selectedMutations.forEach(d => {
+        d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 0)
+        d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 0)
+      })
+    } else {
+      selectedMutations.forEach(d => {
+        d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 1)
+        d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 1)
+      })
+    }
+  }
 
   let updateStats = (): void => {
     let visibleMutations = data.mutations.filter(d =>
@@ -626,6 +618,20 @@ export default ({
         })
   }
 
+  let resetBtn = document.querySelector(`#reset`)
+
+  resetBtn.addEventListener(`click`, () => {
+    targetMin = 0
+    targetMax = domainWidth
+    animating = true
+    consequenceFilters = []
+    impactFilters = []
+    d3.selectAll(`.mutation-filter`).property(`checked`, true)
+    updateStats()
+    filterMutations(true)
+    draw()
+  })
+
   /**
    * Events
   */
@@ -669,7 +675,6 @@ export default ({
   let minimap = document.querySelector(`.minimap`)
   let chart = document.querySelector(`.chart`)
   let chartZoomArea = document.querySelector(`.chart-zoom-area`)
-  let resetBtn = document.querySelector(`#reset`)
 
   minimap.addEventListener(`mousedown`, event => {
     dragging = true
@@ -758,17 +763,6 @@ export default ({
         zoom.attr(`x`, event.offsetX)
       }
     }
-  })
-
-  resetBtn.addEventListener(`click`, () => {
-    targetMin = 0
-    targetMax = domainWidth
-    animating = true
-    consequenceFilters = []
-    impactFilters = []
-    d3.selectAll(`.mutation-filter`).property(`checked`, true)
-    updateStats()
-    draw()
   })
 
   /*
