@@ -6,8 +6,6 @@ import attrs from './attrs'
 
 d3.selection.prototype.attrs = attrs
 
-window.d3 = d3
-
 // Easing
 
 type EaseOutCubic = (ci: number, sv: number, cv: number, ti: number) => number
@@ -339,7 +337,7 @@ export default ({
       y1: height - xAxisOffset,
       x2: d => (d.x * scale) + yAxisOffset + halfPixel,
       y2: d => height - xAxisOffset - d.donors * 10,
-      stroke: black,
+      stroke: `rgba(0, 0, 0, 0.2)`,
     })
 
   let mutationChartCircles = d3.select(`.chart`)

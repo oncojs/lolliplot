@@ -3,7 +3,7 @@ var webpack = require('webpack')
 
 module.exports = {
   entry: [
-    './src/humanbody.js'
+    './src/vis.js'
   ],
   output: {
     path: path.join(__dirname, 'dist'),
