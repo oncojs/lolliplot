@@ -10,7 +10,7 @@ module.exports = {
     filename: 'vis.js',
     publicPath: '/static/',
     libraryTarget: 'var',
-    library: 'vis', // TODO: get from args
+    library: 'ProteinViewer', // TODO: get from args
   },
   module: {
     loaders: [{

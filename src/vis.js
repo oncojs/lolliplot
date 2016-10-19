@@ -41,10 +41,12 @@ export default ({
   selector,
   height,
   width,
+  domainWidth,
   labelSize,
   offsetLeft,
   offsetTop,
-  hideStats
+  hideStats,
+  selectedMutationClass,
 } = {}) => {
   // Similar to a React target element
   let root = document.querySelector(selector)
@@ -53,10 +55,9 @@ export default ({
 
   width = width || root.clientWidth
   height = height || root.clientHeight
+  domainWidth = domainWidth || 500
   labelSize = labelSize || `12px`
-
-  let domainWidth = 500
-  let rangeHeight = 100
+  selectedMutationClass = selectedMutationClass || `Consequence`
 
   let min = 0
   let max = domainWidth
@@ -122,7 +123,7 @@ export default ({
 
   // Chart clipPath
 
-  d3.select(`.chart`)
+  defs
     .append(`clipPath`)
     .attr(`id`, `chart-clip`)
     .append(`rect`)
@@ -282,8 +283,8 @@ export default ({
           })
 
         d3.select(`.tooltip`)
-          .style(`left`, d3.event.clientX + 20 + `px`)
-          .style(`top`, d3.event.clientY - 22 + `px`)
+          .style(`left`, d3.event.pageX + 20 + `px`)
+          .style(`top`, d3.event.pageY - 22 + `px`)
           .html(`
             <div>${d.id}</div>
             <div>${d.description}</div>
@@ -377,16 +378,16 @@ export default ({
       cx: d => (d.x * scale) + yAxisOffset + halfPixel,
       cy: d => height - xAxisOffset - d.donors * 10,
       r: d => Math.max(3, d.donors / 2),
-      fill: d => d.impact === `high`
+      fill: d => d.impact === `HIGH`
         ? `rgb(194, 78, 78)`
-        : d.impact === `low`
+        : d.impact === `MODERATE`
           ? `rgb(158, 201, 121)`
           : `rgb(162, 162, 162)`,
     })
     .on(`mouseover`, function (d) {
       d3.select(`.tooltip`)
-        .style(`left`, d3.event.clientX + 20 + `px`)
-        .style(`top`, d3.event.clientY - 22 + `px`)
+        .style(`left`, d3.event.pageX + 20 + `px`)
+        .style(`top`, d3.event.pageY - 22 + `px`)
         .html(`
           <div>Mutation ID: ${d.id}</div>
           <div># of Cases: ${d.donors}</div>
@@ -513,41 +514,51 @@ export default ({
 
   // Stats Bar
 
-  let stats = d3.select(`#root`)
+  let stats = d3.select(selector)
     .append(`div`)
     .attr(`id`, `mutation-stats`)
     .style(`display`, hideStats ? `none` : `block`)
 
   stats
     .style(`position`, `absolute`)
-    .style('top', `0px`)
-    .style('left', width - statsBoxWidth + 35 + `px`)
-    .style('line-height', `20px`)
+    .style(`top`, `0px`)
+    .style(`left`, width - statsBoxWidth + 35 + `px`)
+    .style(`line-height`, `20px`)
     .append(`div`)
     .html(`Viewing <b>${data.mutations.length}</b> / <b>${data.mutations.length}</b> Mutations`)
     .attr(`class`, `mutation-count`)
-    .style('font-weight', 100)
-    .style('font-size', `16px`)
+    .style(`font-size`, `16px`)
+
+  stats
+    .append(`select`)
+    .html(`
+      <option>Consequence</option>
+      <option>Impact</option>
+    `)
+    .on(`change`, () => {
+      d3.selectAll(`[id^=class]`).style(`display`, `none`)
+      d3.select(`#class-${d3.event.target.value}`).style(`display`, `block`)
+    })
 
   let consequences = groupByType(`consequence`, data.mutations)
   let impacts = groupByType(`impact`, data.mutations)
 
-  stats
-    .append(`div`)
+  let consequencesContainer = stats
+    .append(`span`)
     .text(`Consequence:`)
-    .attrs({ class: `consquence-label` })
-    .style('font-weight', `bold`)
-    .style('font-size', `14px`)
+    .attr(`id`, `class-Consequence`)
+    .style(`display`, selectedMutationClass === `Consequence` ? `block` : `none`)
+    .style(`font-weight`, `bold`)
+    .style(`font-size`, `14px`)
 
   Object.keys(consequences).map(type => {
-    stats
+    consequencesContainer
       .append(`div`)
       .html(`
         <input type="checkbox" id="toggle-consequence-${type}" class="mutation-filter" checked="true" />
-        <span class="consquence-counts-${type}">${type}: ${consequences[type].length}</span>
+        <span class="consquence-counts-${type}">${type}: <b>${consequences[type].length}</b> / <b>${consequences[type].length}</b></span>
       `)
-      .style('font-weight', 100)
-      .style('font-size', `14px`)
+      .style(`font-size`, `14px`)
       .on(`click`, () => {
         // Bail if not the checkbox above
         if (!d3.event.target.id.includes(`toggle-consequence`)) return
@@ -564,24 +575,22 @@ export default ({
       })
   })
 
-  stats
-    .append(`div`)
+  let impactsContainer = stats
+    .append(`span`)
     .text(`Impact:`)
-    .attrs({
-      class: `consquence-label`,
-    })
-    .style('font-weight', `bold`)
-    .style('font-size', `14px`)
+    .attr(`id`, `class-Impact`)
+    .style(`display`, selectedMutationClass === `Impact` ? `block` : `none`)
+    .style(`font-weight`, `bold`)
+    .style(`font-size`, `14px`)
 
   Object.keys(impacts).map((type, i) => {
-    stats
+    impactsContainer
       .append(`div`)
       .html(`
         <input type="checkbox" id="toggle-impacts-${type}" class="mutation-filter" checked="true" />
-        <span class="impacts-counts-${type}">${type}: ${impacts[type].length}</span>
+        <span class="impacts-counts-${type}">${type}: <b>${impacts[type].length}</b> / <b>${impacts[type].length}</b></span>
       `)
-      .style('font-weight', 100)
-      .style('font-size', `14px`)
+      .style(`font-size`, `14px`)
       .on(`click`, () => {
         // Bail if not the checkbox above
         if (!d3.event.target.id.includes(`toggle-impacts`)) return
@@ -629,14 +638,14 @@ export default ({
     Object.keys(consequences).map(type => {
       if (!visibleConsequences[type]) {
         d3.select(`.consquence-counts-${type}`)
-          .text(`${type}: 0`)
+          .html(`${type}: <b>0</b> / <b>${consequences[type].length}</b> `)
       }
     })
 
     Object.keys(impacts).map(type => {
       if (!visibleImpacts[type]) {
         d3.select(`.impacts-counts-${type}`)
-          .text(`${type}: 0`)
+          .html(`${type}: <b>0</b> / <b>${impacts[type].length}</b>`)
       }
     })
 
@@ -648,7 +657,7 @@ export default ({
       .filter(type => !consequenceFilters.includes(type))
       .map((type, i) => {
         d3.select(`.consquence-counts-${type}`)
-          .text(`${type}: ${visibleConsequences[type].length}`)
+          .html(`${type}: <b>${visibleConsequences[type].length}</b> / <b>${consequences[type].length}</b>`)
       })
 
     Object
@@ -656,7 +665,7 @@ export default ({
       .filter(type => !impactFilters.includes(type))
       .map((type, i) => {
         d3.select(`.impacts-counts-${type}`)
-          .text(`${type}: ${visibleImpacts[type].length}`)
+          .html(`${type}: <b>${visibleImpacts[type].length}</b> / <b>${impacts[type].length}</b>`)
         })
   }
 
@@ -674,7 +683,7 @@ export default ({
 
   let resetBtn = document.querySelector(`#reset`)
   if (resetBtn) resetBtn.addEventListener(`click`, reset)
-  
+
   /**
    * Events
   */
