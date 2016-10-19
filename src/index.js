@@ -49,6 +49,7 @@ vis({
   data: data(80),
   clickHandler: d => console.dir(d),
   height: 450,
+  hideStats: true,
 })
 
 /*----------------------------------------------------------------------------*/

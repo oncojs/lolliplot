@@ -44,7 +44,8 @@ export default ({
   labelSize,
   offsetLeft,
   offsetTop,
-} = {}): void => {
+  hideStats
+} = {}) => {
   // Similar to a React target element
   let root = document.querySelector(selector)
 
@@ -68,7 +69,7 @@ export default ({
   let yAxisOffset = 45
   let xAxisOffset = 200
 
-  let statsBoxWidth = 300
+  let statsBoxWidth = hideStats ? 0 : 300
   let proteinHeight = 40
 
   let xAxisLength = width - yAxisOffset - statsBoxWidth
@@ -94,6 +95,30 @@ export default ({
       class: `chart`,
       ...dim(width, height),
     })
+
+  // Filters
+
+  let defs = svg.append(`defs`)
+
+  let filter = defs.append(`filter`)
+    .attr(`id`, `drop-shadow`)
+    .attr(`height`, `180%`)
+    .attr(`width`, `180%`)
+    .attr(`x`, `-40%`)
+    .attr(`y`, `-40%`)
+
+  filter.append(`feGaussianBlur`)
+    .attr(`in`, `SourceAlpha`)
+    .attr(`stdDeviation`, 3)
+    .attr(`result`, `blur`)
+
+  let feMerge = filter.append(`feMerge`)
+
+  feMerge.append(`feMergeNode`)
+    .attr(`in`, `blur`)
+
+  feMerge.append(`feMergeNode`)
+    .attr(`in`, `SourceGraphic`)
 
   // Chart clipPath
 
@@ -358,7 +383,7 @@ export default ({
           ? `rgb(158, 201, 121)`
           : `rgb(162, 162, 162)`,
     })
-    .on(`mouseover`, d => {
+    .on(`mouseover`, function (d) {
       d3.select(`.tooltip`)
         .style(`left`, d3.event.clientX + 20 + `px`)
         .style(`top`, d3.event.clientY - 22 + `px`)
@@ -368,9 +393,27 @@ export default ({
           <div>Amino Acid Change: Arg<b>${d.x}</b>Ter</div>
           <div>Functional Impact: ${d.impact}</div>
         `)
+
+      let el = d3.select(this)
+
+      d.pR = +el.attr(`r`)
+      d.pFill = el.attr(`fill`)
+
+      el.attr(`cursor`, `pointer`)
+        .attr(`filter`, `url(#drop-shadow)`)
+        .transition()
+        .attr(`r`, d.pR + 8)
+        .attr(`fill`, d3.color(el.attr(`fill`)).brighter())
     })
-    .on(`mouseout`, () => {
+    .on(`mouseout`, function (d) {
       d3.select(`.tooltip`).style(`left`, `-9999px`)
+
+      let el = d3.select(this)
+
+      el.attr(`filter`, null)
+        .transition()
+        .attr(`r`, d.pR)
+        .attr(`fill`, d.pFill)
     })
 
   data.mutations.forEach(d => {
@@ -473,6 +516,7 @@ export default ({
   let stats = d3.select(`#root`)
     .append(`div`)
     .attr(`id`, `mutation-stats`)
+    .style(`display`, hideStats ? `none` : `block`)
 
   stats
     .style(`position`, `absolute`)
@@ -480,7 +524,7 @@ export default ({
     .style('left', width - statsBoxWidth + 35 + `px`)
     .style('line-height', `20px`)
     .append(`div`)
-    .text(`${data.mutations.length} Mutations`)
+    .html(`Viewing <b>${data.mutations.length}</b> / <b>${data.mutations.length}</b> Mutations`)
     .attr(`class`, `mutation-count`)
     .style('font-weight', 100)
     .style('font-size', `16px`)
@@ -597,7 +641,7 @@ export default ({
     })
 
     d3.select(`.mutation-count`)
-      .text(`${visibleMutations.length} Mutations`)
+      .html(`Viewing <b>${visibleMutations.length}</b> / <b>${data.mutations.length}</b> Mutations`)
 
     Object
       .keys(visibleConsequences)
@@ -616,9 +660,7 @@ export default ({
         })
   }
 
-  let resetBtn = document.querySelector(`#reset`)
-
-  resetBtn.addEventListener(`click`, () => {
+  let reset = () => {
     targetMin = 0
     targetMax = domainWidth
     animating = true
@@ -628,8 +670,11 @@ export default ({
     updateStats()
     filterMutations(true)
     draw()
-  })
+  }
 
+  let resetBtn = document.querySelector(`#reset`)
+  if (resetBtn) resetBtn.addEventListener(`click`, reset)
+  
   /**
    * Events
   */
@@ -884,6 +929,11 @@ export default ({
 
     if (animating) requestAnimationFrame(draw)
 
+  }
+
+  return {
+    reset,
+    updateStats,
   }
 
 }
