@@ -6,12 +6,13 @@ import attrs from './attrs'
 import { dim, halfPixel } from './spatial'
 import setupStore from './store'
 import setupFilters from './filters'
-import setupProteins from './proteins'
 import setupMinimap from './minimap'
+import setupProteins from './proteins'
+import { setupMutations, updateMutations } from './mutations'
+import { setupStats, updateStats } from './stats'
 import { shouldAnimationFinish, calculateNextCoordinate } from './animation'
-import groupByType from './groupByType'
-import updateStats from './updateStats'
 import theme from './theme'
+import groupByType from './groupByType'
 
 /*----------------------------------------------------------------------------*/
 
@@ -164,90 +165,14 @@ export default ({
       'font-size': `11px`,
     })
 
-  // Mutations
-
-  let mutationChartLines = d3.select(`.chart`)
-    .append(`g`)
-    .selectAll(`line`)
-    .data(data.mutations)
-    .enter()
-    .append(`line`)
-    .attrs({
-      class: d => `mutation-line-${d.id}`,
-      'clip-path': `url(#chart-clip)`,
-      x1: d => (d.x * scale) + yAxisOffset + halfPixel,
-      y1: height - xAxisOffset,
-      x2: d => (d.x * scale) + yAxisOffset + halfPixel,
-      y2: d => height - xAxisOffset - d.donors * 10,
-      stroke: `rgba(0, 0, 0, 0.2)`,
-    })
-
-  let mutationChartCircles = d3.select(`.chart`)
-    .append(`g`)
-    .selectAll(`circle`)
-    .data(data.mutations)
-    .enter()
-    .append(`circle`)
-    .attrs({
-      class: d => `mutation-circle-${d.id}`,
-      'clip-path': `url(#chart-clip)`,
-      cx: d => (d.x * scale) + yAxisOffset + halfPixel,
-      cy: d => height - xAxisOffset - d.donors * 10,
-      r: d => Math.max(3, d.donors / 2),
-      fill: d => d.impact === `HIGH`
-        ? `rgb(194, 78, 78)`
-        : d.impact === `MODERATE`
-          ? `rgb(158, 201, 121)`
-          : `rgb(162, 162, 162)`,
-    })
-    .on(`mouseover`, function (d) {
-      d3.select(`.tooltip`)
-        .style(`left`, d3.event.pageX + 20 + `px`)
-        .style(`top`, d3.event.pageY - 22 + `px`)
-        .html(`
-          <div>Mutation ID: ${d.id}</div>
-          <div># of Cases: ${d.donors}</div>
-          <div>Amino Acid Change: Arg<b>${d.x}</b>Ter</div>
-          <div>Functional Impact: ${d.impact}</div>
-        `)
-
-      let el = d3.select(this)
-
-      d.pR = +el.attr(`r`)
-      d.pFill = el.attr(`fill`)
-
-      el.attr(`cursor`, `pointer`)
-        .attr(`filter`, `url(#drop-shadow)`)
-        .transition()
-        .attr(`r`, d.pR + 8)
-        .attr(`fill`, d3.color(el.attr(`fill`)).brighter())
-    })
-    .on(`mouseout`, function (d) {
-      d3.select(`.tooltip`).style(`left`, `-9999px`)
-
-      let el = d3.select(this)
-
-      el.attr(`filter`, null)
-        .transition()
-        .attr(`r`, d.pR)
-        .attr(`fill`, d.pFill)
-    })
-    .on(`click`, clickHandler)
-
-  data.mutations.forEach(d => {
-    // Mutation lines on minimap
-
-    d3.select(`.chart`)
-      .append(`line`)
-      .attrs({
-        class: `mutation-line-${d.id}`,
-        x1: (d.x * scale) + yAxisOffset,
-        y1: height - xAxisOffset + proteinHeight + 60,
-        x2: (d.x * scale) + yAxisOffset + halfPixel,
-        y2: height - xAxisOffset + proteinHeight - (d.donors * 1.5) + 60,
-        stroke: theme.black,
-        'pointer-events': `none`,
-      })
+  let { mutationChartLines, mutationChartCircles } = setupMutations({
+    clickHandler,
+    data,
+    yAxisOffset,
+    xAxisOffset,
+    height,
+    proteinHeight,
+    scale,
   })
 
   // yAxis label
@@ -329,122 +254,20 @@ export default ({
       })
   }
 
-  // Stats Bar
-
-  let stats = d3.select(selector)
-    .append(`div`)
-    .attr(`id`, `mutation-stats`)
-    .style(`display`, hideStats ? `none` : `block`)
-
-  stats
-    .style(`position`, `absolute`)
-    .style(`top`, `0px`)
-    .style(`left`, width - statsBoxWidth + 35 + `px`)
-    .style(`line-height`, `20px`)
-    .append(`div`)
-    .html(`Viewing <b>${data.mutations.length}</b> / <b>${data.mutations.length}</b> Mutations`)
-    .attr(`class`, `mutation-count`)
-    .style(`font-size`, `16px`)
-
-  stats
-    .append(`select`)
-    .html(`
-      <option>Consequence</option>
-      <option>Impact</option>
-    `)
-    .on(`change`, () => {
-      d3.selectAll(`[id^=class]`).style(`display`, `none`)
-      d3.select(`#class-${d3.event.target.value}`).style(`display`, `block`)
-    })
-
   let consequences = groupByType(`consequence`, data.mutations)
   let impacts = groupByType(`impact`, data.mutations)
 
-  let consequencesContainer = stats
-    .append(`span`)
-    .text(`Consequence:`)
-    .attr(`id`, `class-Consequence`)
-    .style(`display`, selectedMutationClass === `Consequence` ? `block` : `none`)
-    .style(`font-weight`, `bold`)
-    .style(`font-size`, `14px`)
-
-  Object.keys(consequences).map(type => {
-    consequencesContainer
-      .append(`div`)
-      .html(`
-        <input type="checkbox" id="toggle-consequence-${type}" class="mutation-filter" checked="true" />
-        <span class="consquence-counts-${type}">${type}: <b>${consequences[type].length}</b> / <b>${consequences[type].length}</b></span>
-      `)
-      .style(`font-size`, `14px`)
-      .on(`click`, () => {
-        // Bail if not the checkbox above
-        if (!d3.event.target.id.includes(`toggle-consequence`)) return
-
-        let type = d3.event.target.id.split(`-`).pop()
-        let checked = d3.event.target.checked
-        let { consequenceFilters } = store.getState()
-
-        store.update({ consequenceFilters: checked
-          ? consequenceFilters.filter(d => d !== type)
-          : [...consequenceFilters, type],
-        })
-
-        updateStats({ store, data, consequences, impacts })
-        filterMutations(checked, `consequence`, type)
-      })
+  setupStats({
+    data,
+    store,
+    selector,
+    hideStats,
+    statsBoxWidth,
+    width,
+    selectedMutationClass,
+    consequences,
+    impacts,
   })
-
-  let impactsContainer = stats
-    .append(`span`)
-    .text(`Impact:`)
-    .attr(`id`, `class-Impact`)
-    .style(`display`, selectedMutationClass === `Impact` ? `block` : `none`)
-    .style(`font-weight`, `bold`)
-    .style(`font-size`, `14px`)
-
-  Object.keys(impacts).map(type => {
-    impactsContainer
-      .append(`div`)
-      .html(`
-        <input type="checkbox" id="toggle-impacts-${type}" class="mutation-filter" checked="true" />
-        <span class="impacts-counts-${type}">${type}: <b>${impacts[type].length}</b> / <b>${impacts[type].length}</b></span>
-      `)
-      .style(`font-size`, `14px`)
-      .on(`click`, () => {
-        // Bail if not the checkbox above
-        if (!d3.event.target.id.includes(`toggle-impacts`)) return
-
-        let type = d3.event.target.id.split(`-`).pop()
-        let checked = d3.event.target.checked
-        let { impactFilters } = store.getState()
-
-        store.update({ impactFilters: checked
-          ? impactFilters.filter(d => d !== type)
-          : [...impactFilters, type],
-        })
-
-        updateStats({ store, data, consequences, impacts })
-        filterMutations(checked, `impact`, type)
-      })
-  })
-
-  let filterMutations = (checked, mutationClass, type) => {
-    let selectedMutations = mutationClass
-      ? data.mutations.filter(x => x[mutationClass] === type)
-      : data.mutations.slice()
-
-    if (!checked) {
-      selectedMutations.forEach(d => {
-        d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 0)
-        d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 0)
-      })
-    } else {
-      selectedMutations.forEach(d => {
-        d3.select(`.mutation-line-${d.id}`).attr(`opacity`, 1)
-        d3.selectAll(`.mutation-circle-${d.id}`).attr(`opacity`, 1)
-      })
-    }
-  }
 
   let reset = () => {
     store.update({
@@ -456,8 +279,9 @@ export default ({
     })
 
     d3.selectAll(`.mutation-filter`).property(`checked`, true)
+
     updateStats({ store, data, consequences, impacts })
-    filterMutations(true)
+    updateMutations({ checked: true, data })
     draw()
   }
 
