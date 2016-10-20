@@ -18,11 +18,18 @@ import groupByType from './groupByType'
 
 d3.selection.prototype.attrs = attrs
 
-/**
- *  This is the protein viewer function.
-*/
-
-export default ({
+type TProteinLolliplotArgs = {
+  clickHandler: Function,
+  data: Object,
+  selector: string,
+  height: number,
+  width: number,
+  domainWidth: number,
+  hideStats: bool,
+  selectedMutationClass: string,
+}
+type TProteinLolliplot = (args: TProteinLolliplotArgs) => Object
+let proteinLolliplot: TProteinLolliplot = ({
   clickHandler,
   data,
   selector,
@@ -540,3 +547,7 @@ export default ({
   }
 
 }
+
+/*----------------------------------------------------------------------------*/
+
+export default proteinLolliplot
