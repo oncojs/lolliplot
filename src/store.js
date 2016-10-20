@@ -12,6 +12,10 @@ export default ({ domainWidth }) => {
     targetMax: domainWidth,
     domain: domainWidth,
     currentAnimationIteration: 0,
+    consequenceFilters: [],
+    impactFilters: [],
+    dragging: false,
+    zoomStart: null,
   }
 
   let reducer = handleActions({

@@ -7,22 +7,15 @@ import { dim, halfPixel } from './spatial'
 import setupStore from './store'
 import setupFilters from './filters'
 import setupProteins from './proteins'
+import setupMinimap from './minimap'
 import { shouldAnimationFinish, calculateNextCoordinate } from './animation'
+import groupByType from './groupByType'
+import updateStats from './updateStats'
+import theme from './theme'
 
 /*----------------------------------------------------------------------------*/
 
 d3.selection.prototype.attrs = attrs
-
-// Color
-
-let black = `rgb(55, 55, 55)`
-
-// Data
-
-type GroupByType = (type: string, data: Array<Object>) => Object
-let groupByType: GroupByType = (type, data) => data.reduce((acc, val) => ({
-  ...acc, [val[type]]: acc[val[type]] ? [...acc[val[type]], val] : [val],
-}), {})
 
 /**
  *  This is the protein viewer function.
@@ -59,12 +52,6 @@ export default ({
   let scale = (xAxisLength) / domainWidth
 
   let totalAnimationIterations = 30
-
-  let dragging = false
-  let zoomStart
-
-  let consequenceFilters = []
-  let impactFilters = []
 
   let store = setupStore({ domainWidth })
 
@@ -117,7 +104,7 @@ export default ({
       y1: 0,
       x2: yAxisOffset,
       y2: height - xAxisOffset + proteinHeight,
-      stroke: black,
+      stroke: theme.black,
     })
 
   // xAxis
@@ -131,7 +118,7 @@ export default ({
       y1: height - xAxisOffset,
       x2: width - statsBoxWidth,
       y2: height - xAxisOffset,
-      stroke: black,
+      stroke: theme.black,
     })
 
   // Vertical line on the right of the protein bar
@@ -145,7 +132,7 @@ export default ({
       y1: height - xAxisOffset,
       x2: width - statsBoxWidth,
       y2: height - xAxisOffset + proteinHeight,
-      stroke: black,
+      stroke: theme.black,
     })
 
   // Horizontal line under protein bar
@@ -159,69 +146,10 @@ export default ({
       y1: height - xAxisOffset + proteinHeight + halfPixel,
       x2: width - statsBoxWidth,
       y2: height - xAxisOffset + proteinHeight + halfPixel,
-      stroke: black,
+      stroke: theme.black,
     })
 
-  // Minimap
-
-  svg
-    .append(`g`)
-    .append(`rect`)
-    .attrs({
-      class: `minimap`,
-      x: yAxisOffset,
-      y: height - xAxisOffset + proteinHeight + 20,
-      ...dim(xAxisLength, 50),
-      stroke: `rgb(138, 138, 138)`,
-      fill: `white`,
-      cursor: `text`,
-    })
-
-  svg
-    .append(`g`)
-    .append(`clipPath`)
-    .attr(`id`, `minimap-clip`)
-    .append(`rect`)
-    .attrs({
-      x: yAxisOffset,
-      y: height - xAxisOffset + proteinHeight + 20,
-      ...dim(xAxisLength, 50),
-    })
-
-  svg
-    .append(`g`)
-    .append(`rect`)
-    .attrs({
-      class: `minimap-zoom-area`,
-      x: yAxisOffset + halfPixel,
-      y: height - xAxisOffset + proteinHeight + 20 + halfPixel,
-      ...dim(xAxisLength - 1, 40 - 1),
-      fill: `rgba(162, 255, 196, 0.88)`,
-      'pointer-events': `none`,
-    })
-
-  svg
-    .append(`g`)
-    .append(`text`)
-    .text(`Click and drag over an area, or select a protein to zoom the chart`)
-    .attrs({
-      class: `minimap-label`,
-      x: yAxisOffset,
-      y: height - xAxisOffset + proteinHeight + 15,
-      'font-size': `11px`,
-    })
-
-  svg
-    .append(`g`)
-    .append(`line`)
-    .attrs({
-      class: `minimap-protein-mutation-divider`,
-      x1: yAxisOffset,
-      y1: height - xAxisOffset + proteinHeight + 60 - halfPixel,
-      x2: xAxisLength + yAxisOffset,
-      y2: height - xAxisOffset + proteinHeight + 60 - halfPixel,
-      stroke: black,
-    })
+  setupMinimap({ svg, height, yAxisOffset, xAxisOffset, xAxisLength, proteinHeight })
 
   // Protein db label
 
@@ -317,7 +245,7 @@ export default ({
         y1: height - xAxisOffset + proteinHeight + 60,
         x2: (d.x * scale) + yAxisOffset + halfPixel,
         y2: height - xAxisOffset + proteinHeight - (d.donors * 1.5) + 60,
-        stroke: black,
+        stroke: theme.black,
         'pointer-events': `none`,
       })
   })
@@ -365,7 +293,7 @@ export default ({
         y1: scaleLinearY((maxDonors / numYTicks) * i),
         x2: yAxisOffset,
         y2: scaleLinearY((maxDonors / numYTicks) * i),
-        stroke: black,
+        stroke: theme.black,
       })
   }
 
@@ -396,7 +324,7 @@ export default ({
         y1: height - xAxisOffset,
         x2: length * i * scale + yAxisOffset,
         y2: height - xAxisOffset + 10,
-        stroke: black,
+        stroke: theme.black,
         'pointer-events': `none`,
       })
   }
@@ -454,12 +382,14 @@ export default ({
 
         let type = d3.event.target.id.split(`-`).pop()
         let checked = d3.event.target.checked
+        let { consequenceFilters } = store.getState()
 
-        consequenceFilters = checked
+        store.update({ consequenceFilters: checked
           ? consequenceFilters.filter(d => d !== type)
-          : [...consequenceFilters, type]
+          : [...consequenceFilters, type],
+        })
 
-        updateStats()
+        updateStats({ store, data, consequences, impacts })
         filterMutations(checked, `consequence`, type)
       })
   })
@@ -486,12 +416,14 @@ export default ({
 
         let type = d3.event.target.id.split(`-`).pop()
         let checked = d3.event.target.checked
+        let { impactFilters } = store.getState()
 
-        impactFilters = checked
+        store.update({ impactFilters: checked
           ? impactFilters.filter(d => d !== type)
-          : [...impactFilters, type]
+          : [...impactFilters, type],
+        })
 
-        updateStats()
+        updateStats({ store, data, consequences, impacts })
         filterMutations(checked, `impact`, type)
       })
   })
@@ -514,58 +446,17 @@ export default ({
     }
   }
 
-  let updateStats = (): void => {
-    let { min, max } = store.getState()
-
-    let visibleMutations = data.mutations.filter(d =>
-      (d.x > min && d.x < max) &&
-      !consequenceFilters.includes(d.consequence) &&
-      !impactFilters.includes(d.impact)
-    )
-
-    let visibleConsequences = groupByType(`consequence`, visibleMutations)
-    let visibleImpacts = groupByType(`impact`, visibleMutations)
-
-    Object.keys(consequences).map(type => {
-      if (!visibleConsequences[type]) {
-        d3.select(`.consquence-counts-${type}`)
-          .html(`${type}: <b>0</b> / <b>${consequences[type].length}</b> `)
-      }
-    })
-
-    Object.keys(impacts).map(type => {
-      if (!visibleImpacts[type]) {
-        d3.select(`.impacts-counts-${type}`)
-          .html(`${type}: <b>0</b> / <b>${impacts[type].length}</b>`)
-      }
-    })
-
-    d3.select(`.mutation-count`)
-      .html(`Viewing <b>${visibleMutations.length}</b> / <b>${data.mutations.length}</b> Mutations`)
-
-    Object
-      .keys(visibleConsequences)
-      .filter(type => !consequenceFilters.includes(type))
-      .map(type => {
-        d3.select(`.consquence-counts-${type}`)
-          .html(`${type}: <b>${visibleConsequences[type].length}</b> / <b>${consequences[type].length}</b>`)
-      })
-
-    Object
-      .keys(visibleImpacts)
-      .filter(type => !impactFilters.includes(type))
-      .map(type => {
-        d3.select(`.impacts-counts-${type}`)
-          .html(`${type}: <b>${visibleImpacts[type].length}</b> / <b>${impacts[type].length}</b>`)
-        })
-  }
-
   let reset = () => {
-    store.update({ animating: true, targetMin: 0, targetMax: domainWidth })
-    consequenceFilters = []
-    impactFilters = []
+    store.update({
+      animating: true,
+      targetMin: 0,
+      targetMax: domainWidth,
+      consequenceFilters: [],
+      impactFilters: [],
+    })
+
     d3.selectAll(`.mutation-filter`).property(`checked`, true)
-    updateStats()
+    updateStats({ store, data, consequences, impacts })
     filterMutations(true)
     draw()
   }
@@ -619,8 +510,10 @@ export default ({
   let chartZoomArea = document.querySelector(`.chart-zoom-area`)
 
   minimap.addEventListener(`mousedown`, (event: Event) => {
-    dragging = true
-    zoomStart = event.offsetX
+    store.update({
+      dragging: true,
+      zoomStart: event.offsetX,
+    })
 
     svg
       .append(`g`)
@@ -638,8 +531,10 @@ export default ({
   })
 
   chartZoomArea.addEventListener(`mousedown`, (event: Event) => {
-    dragging = true
-    zoomStart = event.offsetX
+    store.update({
+      dragging: true,
+      zoomStart: event.offsetX,
+    })
 
     svg
       .append(`g`)
@@ -657,9 +552,9 @@ export default ({
   })
 
   chart.addEventListener(`mouseup`, (event: Event) => {
-    if (dragging) {
-      dragging = false
+    let { dragging, zoomStart } = store.getState()
 
+    if (dragging) {
       let difference = event.offsetX - zoomStart
       let zoom = d3.select(`.minimap-zoom`)
 
@@ -687,16 +582,18 @@ export default ({
       let { targetMin, targetMax } = store.getState()
       if (targetMin === targetMax) store.update({ targetMax: targetMax + 1 })
 
-      store.update({ animating: true })
+      store.update({ animating: true, dragging: false })
       draw()
       zoom.remove()
     }
   })
 
-  chart.addEventListener(`mousemove`, (event: Event) => {
+  let dragMouse = selector => (event: Event) => {
+    let { dragging, zoomStart } = store.getState()
+
     if (dragging) {
       let difference = event.offsetX - zoomStart
-      let zoom = d3.select(`.minimap-zoom`)
+      let zoom = d3.select(selector)
 
       zoom.attr(`width`, Math.abs(difference))
 
@@ -704,20 +601,10 @@ export default ({
         zoom.attr(`x`, event.offsetX)
       }
     }
-  })
+  }
 
-  chartZoomArea.addEventListener(`mousemove`, (event: Event) => {
-    if (dragging) {
-      let difference = event.offsetX - zoomStart
-      let zoom = d3.select(`.chart-zoom`)
-
-      zoom.attr(`width`, Math.abs(difference))
-
-      if (difference < 0) {
-        zoom.attr(`x`, event.offsetX)
-      }
-    }
-  })
+  chart.addEventListener(`mousemove`, dragMouse(`.minimap-zoom`))
+  chartZoomArea.addEventListener(`mousemove`, dragMouse(`.chart-zoom`))
 
   /*
    * Animation Function
@@ -796,7 +683,7 @@ export default ({
 
     // Stats
 
-    updateStats()
+    updateStats({ store, data, consequences, impacts })
 
     // Minimap zoom area
 

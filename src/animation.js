@@ -28,7 +28,11 @@ let shouldAnimationFinish: TShouldAnimationFinish = ({
       (min <= targetMin && max >= targetMax)
     )
 
-let calculateNextCoordinate = ({ start, target, currentAnimationIteration, totalAnimationIterations }): number => {
+type TCalculateNextCoordinateArgs = {
+  start: number, target: number, currentAnimationIteration: number, totalAnimationIterations: number
+}
+type TCalculateNextCoordinate = (args: TCalculateNextCoordinateArgs) => number
+let calculateNextCoordinate: TCalculateNextCoordinate = ({ start, target, currentAnimationIteration, totalAnimationIterations }) => {
   let next = start < target
     ? easeOutCubic(currentAnimationIteration, start, target - start, totalAnimationIterations)
     : start + target - easeOutCubic(currentAnimationIteration, target, start - target, totalAnimationIterations)
