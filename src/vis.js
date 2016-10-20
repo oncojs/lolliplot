@@ -28,7 +28,7 @@ let black = `rgb(55, 55, 55)`
 
 type GroupByType = (type: string, data: Array<Object>) => Object
 let groupByType: GroupByType = (type, data) => data.reduce((acc, val) => ({
-  ...acc, [val[type]]: acc[val[type]] ? [...acc[val[type]], val] : [val]
+  ...acc, [val[type]]: acc[val[type]] ? [...acc[val[type]], val] : [val],
 }), {})
 
 /**
@@ -42,9 +42,6 @@ export default ({
   height,
   width,
   domainWidth,
-  labelSize,
-  offsetLeft,
-  offsetTop,
   hideStats,
   selectedMutationClass,
 } = {}) => {
@@ -56,7 +53,6 @@ export default ({
   width = width || root.clientWidth
   height = height || root.clientHeight
   domainWidth = domainWidth || 500
-  labelSize = labelSize || `12px`
   selectedMutationClass = selectedMutationClass || `Consequence`
 
   let min = 0
@@ -76,7 +72,6 @@ export default ({
   let xAxisLength = width - yAxisOffset - statsBoxWidth
   let scale = (xAxisLength) / domainWidth
 
-  let zooming = false
   let animating = false
   let currentAnimationIteration = 0
   let totalAnimationIterations = 30
@@ -294,12 +289,12 @@ export default ({
       .on(`mouseout`, function() {
         d3.select(this)
           .attrs({
-            fill: `hsl(${i * 100}, 80%, 90%)`
+            fill: `hsl(${i * 100}, 80%, 90%)`,
           })
 
         d3.select(`.tooltip`).style(`left`, `-9999px`)
       })
-      .on(`click`, function() {
+      .on(`click`, () => {
         targetMin = d.start
         targetMax = d.end
         animating = true
@@ -583,7 +578,7 @@ export default ({
     .style(`font-weight`, `bold`)
     .style(`font-size`, `14px`)
 
-  Object.keys(impacts).map((type, i) => {
+  Object.keys(impacts).map(type => {
     impactsContainer
       .append(`div`)
       .html(`
@@ -655,7 +650,7 @@ export default ({
     Object
       .keys(visibleConsequences)
       .filter(type => !consequenceFilters.includes(type))
-      .map((type, i) => {
+      .map(type => {
         d3.select(`.consquence-counts-${type}`)
           .html(`${type}: <b>${visibleConsequences[type].length}</b> / <b>${consequences[type].length}</b>`)
       })
@@ -663,7 +658,7 @@ export default ({
     Object
       .keys(visibleImpacts)
       .filter(type => !impactFilters.includes(type))
-      .map((type, i) => {
+      .map(type => {
         d3.select(`.impacts-counts-${type}`)
           .html(`${type}: <b>${visibleImpacts[type].length}</b> / <b>${impacts[type].length}</b>`)
         })
@@ -729,6 +724,7 @@ export default ({
   let chartZoomArea = document.querySelector(`.chart-zoom-area`)
 
   minimap.addEventListener(`mousedown`, event => {
+    if (typeof event !== MouseEvent) return
     dragging = true
     zoomStart = event.offsetX
 
@@ -876,8 +872,6 @@ export default ({
 
     domain = max - min
 
-    let xLength = xAxisLength
-
     let scaleLinear = d3.scaleLinear()
       .domain([min, max])
       .range([yAxisOffset, width - statsBoxWidth])
@@ -904,7 +898,7 @@ export default ({
 
       d3.select(`.protein-name-${d.id}`)
         .attrs({
-          x: barWidth + yAxisOffset < yAxisOffset ? x : Math.max(yAxisOffset, x)
+          x: barWidth + yAxisOffset < yAxisOffset ? x : Math.max(yAxisOffset, x),
         })
     })
 
@@ -936,7 +930,7 @@ export default ({
         width: Math.max(1, ((max - min) * scale) - 1),
       })
 
-    if (animating) requestAnimationFrame(draw)
+    if (animating) window.requestAnimationFrame(draw)
 
   }
 
