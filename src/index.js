@@ -38,16 +38,16 @@ let data = mutations => ({
       impact:  Math.random() * 10 < 3.33
         ? `high`
         : Math.random() * 10 > 6.66
-          ? `low` : `unknown`
+          ? `low` : `unknown`,
 
-    })).filter(x => x.donors > 0))
+    })).filter(x => x.donors > 0)),
   ],
 })
 
 vis({
   selector: `#root`,
   data: data(80),
-  clickHandler: d => console.dir(d),
+  clickHandler: d => console.log(d),
   height: 450,
   // hideStats: true,
   domainWidth: 500,
@@ -62,7 +62,7 @@ let root = document.querySelector(`#root`)
 window.range = range
 
 range.oninput = event => {
-  root.innerHTML = ''
+  root.innerHTML = ``
   label.innerText = event.target.value
   vis({
     selector: `#root`,

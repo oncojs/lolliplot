@@ -1,8 +1,7 @@
-Mutation Density
+Protein Lolliplot :lollipop: :bar_chart:
 =====================
 
-A collection of visualizations designed to simplify the relationship
-between common mutations and their location on a gene.
+Visualization to view relationship between common mutations and their location on a gene.
 
 ### Install
 

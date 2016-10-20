@@ -1,5 +1,5 @@
 {
-  "name": "protein-viewer",
+  "name": "lolliplot",
   "version": "0.1.0",
   "description": "A protein viewer built with d3",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/NCI-GDC/protein-viewe"
+    "url": "@oncojs/lolliplot"
   },
   "keywords": [
     "d3",
@@ -23,7 +23,7 @@
     "edit",
     "webpack"
   ],
-  "author": "alex-wilmer",
+  "author": "OncoJS",
   "devDependencies": {
     "babel-core": "^6.0.20",
     "babel-eslint": "^7.0.0",
@@ -43,6 +43,8 @@
     "d3-selection-multi": "^1.0.0",
     "lodash": "^4.16.4",
     "react": "^15.0.1",
-    "react-dom": "^15.0.1"
+    "react-dom": "^15.0.1",
+    "redux": "^3.6.0",
+    "redux-actions": "^0.12.0"
   }
 }

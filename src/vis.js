@@ -3,22 +3,15 @@
 import 'babel-polyfill'
 import * as d3 from 'd3'
 import attrs from './attrs'
+import { dim, halfPixel } from './spatial'
+import setupStore from './store'
+import setupFilters from './filters'
+import setupProteins from './proteins'
+import { shouldAnimationFinish, calculateNextCoordinate } from './animation'
+
+/*----------------------------------------------------------------------------*/
 
 d3.selection.prototype.attrs = attrs
-
-// Easing
-
-type EaseOutCubic = (ci: number, sv: number, cv: number, ti: number) => number
-let easeOutCubic: EaseOutCubic = (currentIteration, startValue, changeInValue, totalIterations) =>
-  changeInValue * (Math.pow(currentIteration / totalIterations - 1, 3) + 1) + startValue
-
-// Spatial
-
-type DimOb = { width: number, height: number }
-type DimFn = (width: number, height: number) => DimOb
-let dim: DimFn = (width, height) => ({ width, height })
-
-let halfPixel = 0.5
 
 // Color
 
@@ -45,6 +38,7 @@ export default ({
   hideStats,
   selectedMutationClass,
 } = {}) => {
+
   // Similar to a React target element
   let root = document.querySelector(selector)
 
@@ -55,14 +49,6 @@ export default ({
   domainWidth = domainWidth || 500
   selectedMutationClass = selectedMutationClass || `Consequence`
 
-  let min = 0
-  let max = domainWidth
-  let startMin = min
-  let startMax = max
-  let targetMin = min
-  let targetMax = max
-  let domain = max - min
-
   let yAxisOffset = 45
   let xAxisOffset = 200
 
@@ -72,8 +58,6 @@ export default ({
   let xAxisLength = width - yAxisOffset - statsBoxWidth
   let scale = (xAxisLength) / domainWidth
 
-  let animating = false
-  let currentAnimationIteration = 0
   let totalAnimationIterations = 30
 
   let dragging = false
@@ -81,6 +65,8 @@ export default ({
 
   let consequenceFilters = []
   let impactFilters = []
+
+  let store = setupStore({ domainWidth })
 
   // Main Chart
 
@@ -92,29 +78,9 @@ export default ({
       ...dim(width, height),
     })
 
-  // Filters
-
   let defs = svg.append(`defs`)
 
-  let filter = defs.append(`filter`)
-    .attr(`id`, `drop-shadow`)
-    .attr(`height`, `180%`)
-    .attr(`width`, `180%`)
-    .attr(`x`, `-40%`)
-    .attr(`y`, `-40%`)
-
-  filter.append(`feGaussianBlur`)
-    .attr(`in`, `SourceAlpha`)
-    .attr(`stdDeviation`, 3)
-    .attr(`result`, `blur`)
-
-  let feMerge = filter.append(`feMerge`)
-
-  feMerge.append(`feMergeNode`)
-    .attr(`in`, `blur`)
-
-  feMerge.append(`feMergeNode`)
-    .attr(`in`, `SourceGraphic`)
+  setupFilters(defs)
 
   // Chart clipPath
 
@@ -257,79 +223,6 @@ export default ({
       stroke: black,
     })
 
-  // Proteins
-
-  data.proteins.forEach((d, i) => {
-    d3.select(`.chart`)
-      .append(`rect`)
-      .attrs({
-        'clip-path': `url(#chart-clip)`,
-        class: `range-${d.id}`,
-        x: (d.start * scale) + yAxisOffset + halfPixel,
-        y: height - xAxisOffset + halfPixel,
-        ...dim(((d.end - d.start) * scale) - 1, proteinHeight - halfPixel),
-        fill: `hsl(${i * 100}, 80%, 90%)`,
-      })
-      .on(`mouseover`, function() {
-        d3.select(this)
-          .attrs({
-            fill: `hsl(${i * 100}, 85%, 70%)`,
-            cursor: `pointer`,
-          })
-
-        d3.select(`.tooltip`)
-          .style(`left`, d3.event.pageX + 20 + `px`)
-          .style(`top`, d3.event.pageY - 22 + `px`)
-          .html(`
-            <div>${d.id}</div>
-            <div>${d.description}</div>
-            <div><b>Click to zoom</b></div>
-          `)
-      })
-      .on(`mouseout`, function() {
-        d3.select(this)
-          .attrs({
-            fill: `hsl(${i * 100}, 80%, 90%)`,
-          })
-
-        d3.select(`.tooltip`).style(`left`, `-9999px`)
-      })
-      .on(`click`, () => {
-        targetMin = d.start
-        targetMax = d.end
-        animating = true
-        draw()
-      })
-
-    // Protein Names
-
-    d3.select(`.chart`)
-      .append(`text`)
-      .text(d.id.toUpperCase())
-      .attrs({
-        class: `protein-name-${d.id}`,
-        'clip-path': `url(#chart-clip)`,
-        x: (d.start * scale) + yAxisOffset,
-        y: height - xAxisOffset + proteinHeight,
-        fill: `hsl(${i * 100}, 80%, 30%)`,
-        'font-size': `11px`,
-        'pointer-events': `none`,
-      })
-
-    // Proteins on minimap
-
-    d3.select(`.chart`)
-      .append(`rect`)
-      .attrs({
-        class: `domain-${d.id}`,
-        x: (d.start * scale) + yAxisOffset,
-        y: height - xAxisOffset + proteinHeight + 60,
-        ...dim(((d.end - d.start) * scale), 10 - halfPixel),
-        fill: `hsl(${i * 100}, 80%, 70%)`,
-        'pointer-events': `none`,
-      })
-  })
-
   // Protein db label
 
   let proteinDb = `pfam` // TODO: get from data
@@ -411,6 +304,7 @@ export default ({
         .attr(`r`, d.pR)
         .attr(`fill`, d.pFill)
     })
+    .on(`click`, clickHandler)
 
   data.mutations.forEach(d => {
     // Mutation lines on minimap
@@ -621,6 +515,8 @@ export default ({
   }
 
   let updateStats = (): void => {
+    let { min, max } = store.getState()
+
     let visibleMutations = data.mutations.filter(d =>
       (d.x > min && d.x < max) &&
       !consequenceFilters.includes(d.consequence) &&
@@ -665,9 +561,7 @@ export default ({
   }
 
   let reset = () => {
-    targetMin = 0
-    targetMax = domainWidth
-    animating = true
+    store.update({ animating: true, targetMin: 0, targetMax: domainWidth })
     consequenceFilters = []
     impactFilters = []
     d3.selectAll(`.mutation-filter`).property(`checked`, true)
@@ -684,6 +578,7 @@ export default ({
   */
 
   let updateTargetChartZoom = ({ zoomX, zoomWidth, offsetX, difference }) => {
+    let { min, max } = store.getState()
     let draggingLeft = difference < 0
 
     let scale = d3.scaleLinear()
@@ -723,8 +618,7 @@ export default ({
   let chart = document.querySelector(`.chart`)
   let chartZoomArea = document.querySelector(`.chart-zoom-area`)
 
-  minimap.addEventListener(`mousedown`, event => {
-    if (typeof event !== MouseEvent) return
+  minimap.addEventListener(`mousedown`, (event: Event) => {
     dragging = true
     zoomStart = event.offsetX
 
@@ -743,7 +637,7 @@ export default ({
       })
   })
 
-  chartZoomArea.addEventListener(`mousedown`, event => {
+  chartZoomArea.addEventListener(`mousedown`, (event: Event) => {
     dragging = true
     zoomStart = event.offsetX
 
@@ -762,7 +656,7 @@ export default ({
       })
   })
 
-  chart.addEventListener(`mouseup`, event => {
+  chart.addEventListener(`mouseup`, (event: Event) => {
     if (dragging) {
       dragging = false
 
@@ -771,23 +665,35 @@ export default ({
 
       if (zoom.empty()) {
         zoom = d3.select(`.chart-zoom`)
-        ;[targetMin, targetMax] =
-          updateTargetChartZoom({ zoomX: +zoom.attr(`x`), zoomWidth: +zoom.attr(`width`), offsetX: event.offsetX, difference })
+
+        let [targetMin, targetMax] = updateTargetChartZoom({
+          zoomX: +zoom.attr(`x`),
+          zoomWidth: +zoom.attr(`width`),
+          offsetX: event.offsetX, difference,
+        })
+
+        store.update({ targetMin, targetMax })
       } else {
-        ;[targetMin, targetMax] =
-          updateTargetMinimapZoom({ zoomX: +zoom.attr(`x`), zoomWidth: +zoom.attr(`width`), offsetX: event.offsetX, difference })
+        let [targetMin, targetMax] = updateTargetMinimapZoom({
+          zoomX: +zoom.attr(`x`),
+          zoomWidth: +zoom.attr(`width`),
+          offsetX: event.offsetX, difference,
+        })
+
+        store.update({ targetMin, targetMax })
       }
 
-      if (targetMin === targetMax) targetMax++ // at least one coordinate zoom
+      // at least one coordinate zoom
+      let { targetMin, targetMax } = store.getState()
+      if (targetMin === targetMax) store.update({ targetMax: targetMax + 1 })
 
-      animating = true
+      store.update({ animating: true })
       draw()
-
       zoom.remove()
     }
   })
 
-  chart.addEventListener(`mousemove`, event => {
+  chart.addEventListener(`mousemove`, (event: Event) => {
     if (dragging) {
       let difference = event.offsetX - zoomStart
       let zoom = d3.select(`.minimap-zoom`)
@@ -800,7 +706,7 @@ export default ({
     }
   })
 
-  chartZoomArea.addEventListener(`mousemove`, event => {
+  chartZoomArea.addEventListener(`mousemove`, (event: Event) => {
     if (dragging) {
       let difference = event.offsetX - zoomStart
       let zoom = d3.select(`.chart-zoom`)
@@ -814,63 +720,33 @@ export default ({
   })
 
   /*
-   * Animation Helpers
-  */
-
-  let handleAnimationEnd = (min, max) => {
-    animating = false
-    startMin = min
-    startMax = max
-    currentAnimationIteration = 0
-  }
-
-  let shouldAnimationFinish = ({ startMin, targetMin, startMax, targetMax, min, max }) => {
-    if (
-      (
-        (startMin <= targetMin && startMax <= targetMax) &&
-        (min >= targetMin && max >= targetMax)
-      ) ||
-      (
-        (startMin <= targetMin && startMax >= targetMax) &&
-        (min >= targetMin && max <= targetMax)
-      ) ||
-      (
-        (startMin >= targetMin && startMax >= targetMax) &&
-        (min <= targetMin && max <= targetMax)
-      ) ||
-      (
-        (startMin >= targetMin && startMax <= targetMax) &&
-        (min <= targetMin && max >= targetMax)
-      )
-    ) {
-      handleAnimationEnd(min, max)
-    }
-  }
-
-  let calculateNextCoordinate = ({ start, target, currentAnimationIteration }) => {
-    let next = start < target
-      ? easeOutCubic(currentAnimationIteration, start, target - start, totalAnimationIterations)
-      : start + target - easeOutCubic(currentAnimationIteration, target, start - target, totalAnimationIterations)
-
-    return start < target
-      ? Math.min(next, target)
-      : Math.max(next, target)
-  }
-
-  /*
    * Animation Function
   */
 
   let draw = () => {
 
-    min = calculateNextCoordinate({ start: startMin, target: targetMin, currentAnimationIteration })
-    max = calculateNextCoordinate({ start: startMax, target: targetMax, currentAnimationIteration })
+    let { targetMin, targetMax, startMin, startMax, currentAnimationIteration } = store.getState()
 
-    currentAnimationIteration++
+    let min = calculateNextCoordinate({
+      start: startMin, target: targetMin, currentAnimationIteration, totalAnimationIterations,
+    })
 
-    shouldAnimationFinish({ startMin, startMax, targetMin, targetMax, min, max })
+    let max = calculateNextCoordinate({
+      start: startMax, target: targetMax, currentAnimationIteration, totalAnimationIterations,
+    })
 
-    domain = max - min
+    let domain = max - min
+
+    store.update({ min, max, domain, currentAnimationIteration: currentAnimationIteration + 1 })
+
+    if (shouldAnimationFinish({ startMin, startMax, targetMin, targetMax, min, max })) {
+      store.update({
+        animating: false,
+        startMin: min,
+        startMax: max,
+        currentAnimationIteration: 0,
+      })
+    }
 
     let scaleLinear = d3.scaleLinear()
       .domain([min, max])
@@ -930,9 +806,22 @@ export default ({
         width: Math.max(1, ((max - min) * scale) - 1),
       })
 
-    if (animating) window.requestAnimationFrame(draw)
+    if (store.getState().animating) window.requestAnimationFrame(draw)
 
   }
+
+  // Proteins
+
+  setupProteins({
+    data,
+    store,
+    scale,
+    yAxisOffset,
+    xAxisOffset,
+    proteinHeight,
+    height,
+    draw,
+  })
 
   return {
     reset,
