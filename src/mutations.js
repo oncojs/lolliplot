@@ -3,6 +3,7 @@ import { halfPixel } from './spatial'
 import theme from './theme'
 
 let setupMutations = ({
+  consequenceColors,
   scaleLinearY,
   clickHandler,
   data,
@@ -40,11 +41,7 @@ let setupMutations = ({
       cx: d => (d.x * scale) + yAxisOffset + halfPixel,
       cy: d => scaleLinearY(d.donors),
       r: d => Math.max(3, d.donors / 2),
-      fill: d => d.impact === `HIGH`
-        ? `rgb(194, 78, 78)`
-        : d.impact === `MODERATE`
-          ? `rgb(158, 201, 121)`
-          : `rgb(162, 162, 162)`,
+      fill: d => consequenceColors[d.consequence],
     })
     .on(`mouseover`, function (d) {
       d3.select(`.tooltip`)

@@ -69,6 +69,13 @@ let proteinLolliplot: TProteinLolliplot = ({
   let consequences = groupByType(`consequence`, data.mutations)
   let impacts = groupByType(`impact`, data.mutations)
 
+  let colorScale = d3.scaleOrdinal(d3.schemeCategory20).domain(d3.range(20))
+
+  let consequenceColors = Object.keys(consequences).reduce((acc, type, i) => ({
+    ...acc,
+    [type]: colorScale(i * 3),
+  }), {})
+
   let maxDonors = Math.max(...data.mutations.map(x => x.donors))
 
   let scaleLinearY = d3.scaleLinear()
@@ -195,6 +202,7 @@ let proteinLolliplot: TProteinLolliplot = ({
     })
 
   let { mutationChartLines, mutationChartCircles } = setupMutations({
+    consequenceColors,
     scaleLinearY,
     clickHandler,
     data,
@@ -224,6 +232,7 @@ let proteinLolliplot: TProteinLolliplot = ({
   })
 
   setupStats({
+    consequenceColors,
     data,
     store,
     selector,

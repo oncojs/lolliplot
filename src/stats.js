@@ -5,6 +5,7 @@ import groupByType from './groupByType'
 import { updateMutations } from './mutations'
 
 type TSetupStatsArgs = {
+  consequenceColors: Object,
   data: Object,
   store: Object,
   selector: string,
@@ -17,6 +18,7 @@ type TSetupStatsArgs = {
 }
 type TSetupStats = (args: TSetupStatsArgs) => void
 let setupStats: TSetupStats = ({
+  consequenceColors,
   data,
   store,
   selector,
@@ -50,6 +52,7 @@ let setupStats: TSetupStats = ({
       <option>Consequence</option>
       <option>Impact</option>
     `)
+    .style(`margin-top`, `6px`)
     .on(`change`, () => {
       d3.selectAll(`[id^=class]`).style(`display`, `none`)
       d3.select(`#class-${d3.event.target.value}`).style(`display`, `block`)
@@ -60,6 +63,7 @@ let setupStats: TSetupStats = ({
     .text(`Consequence:`)
     .attr(`id`, `class-Consequence`)
     .style(`display`, selectedMutationClass === `Consequence` ? `block` : `none`)
+    .style(`margin-top`, `6px`)
     .style(`font-weight`, `bold`)
     .style(`font-size`, `14px`)
 
@@ -67,9 +71,11 @@ let setupStats: TSetupStats = ({
     consequencesContainer
       .append(`div`)
       .html(`
+        <span style="background-color: ${consequenceColors[type]}; display: inline-block; width: 20px;">&nbsp;</span>
         <input type="checkbox" id="toggle-consequence-${type}" class="mutation-filter" checked="true" />
         <span class="consquence-counts-${type}">${type}: <b>${consequences[type].length}</b> / <b>${consequences[type].length}</b></span>
       `)
+      .style(`margin-top`, `6px`)
       .style(`font-size`, `14px`)
       .on(`click`, () => {
         // Bail if not the checkbox above
@@ -94,6 +100,7 @@ let setupStats: TSetupStats = ({
     .text(`Impact:`)
     .attr(`id`, `class-Impact`)
     .style(`display`, selectedMutationClass === `Impact` ? `block` : `none`)
+    .style(`margin-top`, `6px`)
     .style(`font-weight`, `bold`)
     .style(`font-size`, `14px`)
 
@@ -104,6 +111,7 @@ let setupStats: TSetupStats = ({
         <input type="checkbox" id="toggle-impacts-${type}" class="mutation-filter" checked="true" />
         <span class="impacts-counts-${type}">${type}: <b>${impacts[type].length}</b> / <b>${impacts[type].length}</b></span>
       `)
+      .style(`margin-top`, `6px`)
       .style(`font-size`, `14px`)
       .on(`click`, () => {
         // Bail if not the checkbox above
