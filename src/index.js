@@ -1,5 +1,5 @@
 import 'babel-polyfill'
-import vis from './vis'
+import ProteinLolliplot from './ProteinLolliplot'
 
 let data = mutations => ({
   proteins: [
@@ -43,7 +43,7 @@ let data = mutations => ({
   ],
 })
 
-vis({
+ProteinLolliplot({
   selector: `#root`,
   data: data(80),
   clickHandler: d => console.log(d),
@@ -63,7 +63,7 @@ window.range = range
 range.oninput = event => {
   root.innerHTML = ``
   label.innerText = event.target.value
-  vis({
+  ProteinLolliplot({
     selector: `#root`,
     data: data(+event.target.value),
     clickHandler: d => console.dir(d),

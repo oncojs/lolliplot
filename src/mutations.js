@@ -3,6 +3,7 @@ import { halfPixel } from './spatial'
 import theme from './theme'
 
 let setupMutations = ({
+  scaleLinearY,
   clickHandler,
   data,
   yAxisOffset,
@@ -23,7 +24,7 @@ let setupMutations = ({
       x1: d => (d.x * scale) + yAxisOffset + halfPixel,
       y1: height - xAxisOffset,
       x2: d => (d.x * scale) + yAxisOffset + halfPixel,
-      y2: d => height - xAxisOffset - d.donors * 10,
+      y2: d => scaleLinearY(d.donors),
       stroke: `rgba(0, 0, 0, 0.2)`,
     })
 
@@ -37,7 +38,7 @@ let setupMutations = ({
       class: d => `mutation-circle-${d.id}`,
       'clip-path': `url(#chart-clip)`,
       cx: d => (d.x * scale) + yAxisOffset + halfPixel,
-      cy: d => height - xAxisOffset - d.donors * 10,
+      cy: d => scaleLinearY(d.donors),
       r: d => Math.max(3, d.donors / 2),
       fill: d => d.impact === `HIGH`
         ? `rgb(194, 78, 78)`
@@ -47,6 +48,7 @@ let setupMutations = ({
     })
     .on(`mouseover`, function (d) {
       d3.select(`.tooltip`)
+        .style(`pointer-events`, `none`)
         .style(`left`, d3.event.pageX + 20 + `px`)
         .style(`top`, d3.event.pageY - 22 + `px`)
         .html(`

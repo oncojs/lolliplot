@@ -1,9 +1,10 @@
+// @flow
+
 import * as d3 from 'd3'
 import theme from './theme'
 
 let setupTicks = ({
   svg,
-  numYTicks,
   numXTicks,
   maxDonors,
   scaleLinearY,
@@ -18,14 +19,14 @@ let setupTicks = ({
 
   svg.append(`g`).attr(`class`, `yTicks`)
 
-  for (let i = 1; i < numYTicks; i++) {
+  for (let i = 1; i < maxDonors + 5; i += 1) {
     d3.select(`.yTicks`)
       .append(`text`)
-      .text(Math.round(maxDonors / numYTicks) * i)
+      .text(i)
       .attrs({
-        class: `yTick-${i}`,
+        class: `yTick-text-${i}`,
         x: yAxisOffset - 10,
-        y: scaleLinearY((maxDonors / numYTicks) * i) + 3,
+        y: scaleLinearY(i) + 3,
         'font-size': `11px`,
         'text-anchor': `end`,
       })
@@ -33,10 +34,11 @@ let setupTicks = ({
     d3.select(`.yTicks`)
       .append(`line`)
       .attrs({
+        class: `yTick-line-${i}`,
         x1: yAxisOffset - 7,
-        y1: scaleLinearY((maxDonors / numYTicks) * i),
+        y1: scaleLinearY(i),
         x2: yAxisOffset,
-        y2: scaleLinearY((maxDonors / numYTicks) * i),
+        y2: scaleLinearY(i),
         stroke: theme.black,
       })
   }
@@ -52,7 +54,7 @@ let setupTicks = ({
       .append(`text`)
       .text(Math.round(length * i))
       .attrs({
-        class: `xTick-${i}`,
+        class: `xTick-text-${i}`,
         x: length * i * scale + yAxisOffset,
         y: height - xAxisOffset + 20,
         'font-size': `11px`,
@@ -63,6 +65,7 @@ let setupTicks = ({
     d3.select(`.xTicks`)
       .append(`line`)
       .attrs({
+        class: `xTick-line-${i}`,
         x1: length * i * scale + yAxisOffset,
         y1: height - xAxisOffset,
         x2: length * i * scale + yAxisOffset,

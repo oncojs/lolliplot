@@ -25,7 +25,15 @@ let animator = ({
 
   let draw = () => {
 
-    let { targetMin, targetMax, startMin, startMax, currentAnimationIteration } = store.getState()
+    let {
+      targetMin,
+      targetMax,
+      startMin,
+      startMax,
+      currentAnimationIteration,
+      consequenceFilters,
+      impactFilters,
+    } = store.getState()
 
     let min = calculateNextCoordinate({
       start: startMin, target: targetMin, currentAnimationIteration, totalAnimationIterations,
@@ -78,21 +86,52 @@ let animator = ({
         })
     })
 
-    // Horizontal ticks
+    let visibleMutations = data.mutations.filter(d =>
+      (d.x > min && d.x < max) &&
+      !consequenceFilters.includes(d.consequence) &&
+      !impactFilters.includes(d.impact)
+    )
 
-    for (let i = 1; i < numXTicks; i++) {
-      let length = domain / numXTicks
-      d3.select(`.xTick-${i}`)
-        .text(Math.round((length * i) + min))
-    }
+    let maxDonors = Math.max(...visibleMutations.map(x => x.donors))
+
+    let scaleLinearY = d3.scaleLinear()
+      .domain([0, Math.round(maxDonors + 5)])
+      .range([height - xAxisOffset, 0])
 
     // Mutations
     mutationChartLines
       .attr(`x1`, d => scaleLinear(d.x))
       .attr(`x2`, d => scaleLinear(d.x))
+      .transition()
+      .attr(`y2`, d => scaleLinearY(d.donors))
 
     mutationChartCircles
       .attr(`cx`, d => scaleLinear(d.x))
+      .transition()
+      .attr(`cy`, d => scaleLinearY(d.donors))
+
+    // Horizontal ticks
+
+    for (let i = 1; i < numXTicks; i++) {
+      let length = domain / numXTicks
+      d3.select(`.xTick-text-${i}`)
+        .text(Math.round((length * i) + min))
+    }
+
+    // Vertical ticks
+
+    let numYTicks = d3.selectAll(`[class^='yTick-text']`).size()
+
+    for (let i = 1; i < numYTicks + 1; i += 1) {
+      d3.select(`.yTick-text-${i}`)
+        .transition()
+        .attr(`y`, scaleLinearY(i) + 3)
+
+      d3.select(`.yTick-line-${i}`)
+        .transition()
+        .attr(`y1`, scaleLinearY(i))
+        .attr(`y2`, scaleLinearY(i))
+    }
 
     // Stats
 

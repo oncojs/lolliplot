@@ -62,17 +62,17 @@ let proteinLolliplot: TProteinLolliplot = ({
   let scale = (xAxisLength) / domainWidth
 
   let numXTicks = 12
-  let numYTicks = 8
+  let numYTicks = 15
 
   let store = setupStore({ domainWidth })
 
   let consequences = groupByType(`consequence`, data.mutations)
   let impacts = groupByType(`impact`, data.mutations)
 
-  let maxDonors = 20 // TODO mutation donor max
+  let maxDonors = Math.max(...data.mutations.map(x => x.donors))
 
   let scaleLinearY = d3.scaleLinear()
-    .domain([0, maxDonors])
+    .domain([0, Math.round(maxDonors + 5)])
     .range([height - xAxisOffset, 0])
 
   let proteinDb = `pfam` // TODO: get from data
@@ -195,6 +195,7 @@ let proteinLolliplot: TProteinLolliplot = ({
     })
 
   let { mutationChartLines, mutationChartCircles } = setupMutations({
+    scaleLinearY,
     clickHandler,
     data,
     yAxisOffset,
