@@ -3,6 +3,14 @@
 import * as d3 from 'd3'
 import groupByType from './groupByType'
 import { updateMutations } from './mutations'
+import theme from './theme'
+
+// TODO: place in theme?
+let impactsColors = {
+  HIGH: `rgb(221, 60, 60)`,
+  MODERATE: `rgb(132, 168, 56)`,
+  default: `rgb(135, 145, 150)`,
+}
 
 type TSetupStatsArgs = {
   consequenceColors: Object,
@@ -56,7 +64,20 @@ let setupStats: TSetupStats = ({
     .on(`change`, () => {
       d3.selectAll(`[id^=class]`).style(`display`, `none`)
       d3.select(`#class-${d3.event.target.value}`).style(`display`, `block`)
+
+      d3.selectAll(`[class^=mutation-circle]`)
+        .attr(`fill`, d => event.target.value === `Consequence`
+          ? consequenceColors[d.consequence]
+          : impactsColors[d.impact] || impactsColors.default
+        )
     })
+
+  stats
+    .append(`div`)
+    .text(`Click to filter mutations`)
+    .style(`margin-top`, `6px`)
+    .style(`font-size`, `11px`)
+    .style(`color`, theme.black)
 
   let consequencesContainer = stats
     .append(`span`)
@@ -64,15 +85,13 @@ let setupStats: TSetupStats = ({
     .attr(`id`, `class-Consequence`)
     .style(`display`, selectedMutationClass === `Consequence` ? `block` : `none`)
     .style(`margin-top`, `6px`)
-    .style(`font-weight`, `bold`)
     .style(`font-size`, `14px`)
 
   Object.keys(consequences).map(type => {
     consequencesContainer
       .append(`div`)
       .html(`
-        <span style="background-color: ${consequenceColors[type]}; display: inline-block; width: 20px;">&nbsp;</span>
-        <input type="checkbox" id="toggle-consequence-${type}" class="mutation-filter" checked="true" />
+        <span id="toggle-consequence-${type}" data-checked="true" style="background-color: ${consequenceColors[type]}; border: 2px solid ${consequenceColors[type]}; display: inline-block; width: 23px; cursor: pointer; margin-right: 6px;">&nbsp;</span>
         <span class="consquence-counts-${type}">${type}: <b>${consequences[type].length}</b> / <b>${consequences[type].length}</b></span>
       `)
       .style(`margin-top`, `6px`)
@@ -82,8 +101,16 @@ let setupStats: TSetupStats = ({
         if (!d3.event.target.id.includes(`toggle-consequence`)) return
 
         let type = d3.event.target.id.split(`-`).pop()
-        let checked = d3.event.target.checked
+
+        d3.event.target.dataset.checked = d3.event.target.dataset.checked === `true`
+          ? `false`
+          : `true`
+
+        let checked = d3.event.target.dataset.checked === `true`
         let { consequenceFilters } = store.getState()
+
+        d3.select(`#toggle-consequence-${type}`)
+          .style(`background-color`, checked ? consequenceColors[type] : `white`)
 
         store.update({ consequenceFilters: checked
           ? consequenceFilters.filter(d => d !== type)
@@ -101,14 +128,13 @@ let setupStats: TSetupStats = ({
     .attr(`id`, `class-Impact`)
     .style(`display`, selectedMutationClass === `Impact` ? `block` : `none`)
     .style(`margin-top`, `6px`)
-    .style(`font-weight`, `bold`)
     .style(`font-size`, `14px`)
 
   Object.keys(impacts).map(type => {
     impactsContainer
       .append(`div`)
       .html(`
-        <input type="checkbox" id="toggle-impacts-${type}" class="mutation-filter" checked="true" />
+        <span id="toggle-impacts-${type}" data-checked="true" style="background-color: ${impactsColors[type] || impactsColors.default}; border: 2px solid ${impactsColors[type] || impactsColors.default}; display: inline-block; width: 23px; cursor: pointer; margin-right: 6px;">&nbsp;</span>
         <span class="impacts-counts-${type}">${type}: <b>${impacts[type].length}</b> / <b>${impacts[type].length}</b></span>
       `)
       .style(`margin-top`, `6px`)
@@ -118,8 +144,16 @@ let setupStats: TSetupStats = ({
         if (!d3.event.target.id.includes(`toggle-impacts`)) return
 
         let type = d3.event.target.id.split(`-`).pop()
-        let checked = d3.event.target.checked
+
+        d3.event.target.dataset.checked = d3.event.target.dataset.checked === `true`
+          ? `false`
+          : `true`
+
+        let checked = d3.event.target.dataset.checked === `true`
         let { impactFilters } = store.getState()
+
+        d3.select(`#toggle-impacts-${type}`)
+          .style(`background-color`, checked ? (impactsColors[type] || impactsColors.default) : `white`)
 
         store.update({ impactFilters: checked
           ? impactFilters.filter(d => d !== type)
