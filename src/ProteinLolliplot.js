@@ -21,7 +21,7 @@ import animator from './animator'
 d3.selection.prototype.attrs = attrs
 
 type TProteinLolliplotArgs = {
-  clickHandler: Function,
+  onMutationClick: Function,
   data: Object,
   selector: string,
   height: number,
@@ -32,7 +32,7 @@ type TProteinLolliplotArgs = {
 }
 type TProteinLolliplot = (args: TProteinLolliplotArgs) => Object
 let proteinLolliplot: TProteinLolliplot = ({
-  clickHandler,
+  onMutationClick,
   data,
   selector,
   height,
@@ -206,7 +206,7 @@ let proteinLolliplot: TProteinLolliplot = ({
   let { mutationChartLines, mutationChartCircles } = setupMutations({
     consequenceColors,
     scaleLinearY,
-    clickHandler,
+    onMutationClick,
     data,
     yAxisOffset,
     xAxisOffset,
@@ -262,8 +262,19 @@ let proteinLolliplot: TProteinLolliplot = ({
       impactFilters: [],
     })
 
-    updateStats({ store, data, consequences, impacts, consequenceColors })
-    updateMutations({ checked: true, data })
+    updateStats({
+      store,
+      data,
+      consequences,
+      impacts,
+      consequenceColors,
+      height,
+      xAxisOffset,
+      mutationChartLines,
+      mutationChartCircles,
+    })
+
+    updateMutations({ checked: true, data, mutationClass: null, type: null })
     draw()
   }
 

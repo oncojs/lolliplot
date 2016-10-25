@@ -1,11 +1,27 @@
+// @flow
+
 import * as d3 from 'd3'
 import { halfPixel } from './spatial'
 import theme from './theme'
 
-let setupMutations = ({
+type TSetupMutationsArgs = {
+  consequenceColors: Object,
+  scaleLinearY: Function,
+  onMutationClick: Function,
+  data: Object,
+  yAxisOffset: number,
+  xAxisOffset: number,
+  height: number,
+  proteinHeight: number,
+  scale: number,
+  maxDonors: number,
+  store: Object,
+}
+type TSetupMutations = (args: TSetupMutationsArgs) => Object
+let setupMutations: TSetupMutations = ({
   consequenceColors,
   scaleLinearY,
-  clickHandler,
+  onMutationClick,
   data,
   yAxisOffset,
   xAxisOffset,
@@ -82,7 +98,7 @@ let setupMutations = ({
           .attr(`fill`, d.pFill)
       }
     })
-    .on(`click`, clickHandler)
+    .on(`click`, onMutationClick)
 
   data.mutations.forEach(d => {
     // Mutation lines on minimap
@@ -103,7 +119,19 @@ let setupMutations = ({
   return { mutationChartLines, mutationChartCircles }
 }
 
-let updateMutations = ({ checked, mutationClass, type, data }) => {
+type TUpdateMutationsArgs = {
+  checked: bool,
+  mutationClass: ?string,
+  type: ?string,
+  data: Object,
+}
+type TUpdateMutations = (args: TUpdateMutationsArgs) => void
+let updateMutations: TUpdateMutations = ({
+  checked,
+  mutationClass,
+  type,
+  data,
+}) => {
   let selectedMutations = mutationClass
     ? data.mutations.filter(x => x[mutationClass] === type)
     : data.mutations.slice()

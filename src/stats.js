@@ -79,7 +79,7 @@ let setupStats: TSetupStats = ({
       d3.select(`#class-${d3.event.target.value}`).style(`display`, `block`)
 
       d3.selectAll(`[class^=mutation-circle]`)
-        .attr(`fill`, d => event.target.value === `Consequence`
+        .attr(`fill`, d => d3.event.target.value === `Consequence`
           ? consequenceColors[d.consequence]
           : impactsColors[d.impact] || impactsColors.default
         )

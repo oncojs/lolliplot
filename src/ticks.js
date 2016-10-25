@@ -3,7 +3,19 @@
 import * as d3 from 'd3'
 import theme from './theme'
 
-let setupTicks = ({
+type TSetupTicksArgs = {
+  svg: Object,
+  numXTicks: number,
+  maxDonors: number,
+  scaleLinearY: Function,
+  xAxisOffset: number,
+  yAxisOffset: number,
+  domainWidth: number,
+  scale: number,
+  height: number,
+}
+type TSetupTicks = (args: TSetupTicksArgs) => void
+let setupTicks: TSetupTicks = ({
   svg,
   numXTicks,
   maxDonors,

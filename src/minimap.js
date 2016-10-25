@@ -1,7 +1,25 @@
+// @flow
+
 import { dim, halfPixel } from './spatial'
 import theme from './theme'
 
-export default ({ svg, height, yAxisOffset, xAxisOffset, xAxisLength, proteinHeight }) => {
+type TSetupMinimapArgs = {
+  svg: Object,
+  height: number,
+  yAxisOffset: number,
+  xAxisOffset: number,
+  xAxisLength: number,
+  proteinHeight: number,
+}
+type TSetupMinimap = (args: TSetupMinimapArgs) => void
+let setupMinimap: TSetupMinimap = ({
+  svg,
+  height,
+  yAxisOffset,
+  xAxisOffset,
+  xAxisLength,
+  proteinHeight,
+}) => {
   svg
     .append(`g`)
     .append(`rect`)
@@ -61,3 +79,7 @@ export default ({ svg, height, yAxisOffset, xAxisOffset, xAxisLength, proteinHei
       stroke: theme.black,
     })
 }
+
+/*----------------------------------------------------------------------------*/
+
+export default setupMinimap
