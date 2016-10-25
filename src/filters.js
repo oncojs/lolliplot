@@ -1,4 +1,6 @@
-export default defs => {
+// @flow
+
+let filters = (defs: Object) => {
   let filter = defs.append(`filter`)
     .attr(`id`, `drop-shadow`)
     .attr(`height`, `180%`)
@@ -19,3 +21,5 @@ export default defs => {
   feMerge.append(`feMergeNode`)
     .attr(`in`, `SourceGraphic`)
 }
+
+export default filters

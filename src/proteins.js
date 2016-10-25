@@ -1,7 +1,20 @@
+// @flow
+
 import * as d3 from 'd3'
 import { dim, halfPixel } from './spatial'
 
-export default ({
+type TSetupProteinsArgs = {
+  data: Object,
+  store: Object,
+  scale: number,
+  yAxisOffset: number,
+  xAxisOffset: number,
+  proteinHeight: number,
+  height: number,
+  draw: Function,
+}
+type TSetupProteins = (args: TSetupProteinsArgs) => void
+let setupProteins: TSetupProteins = ({
   data,
   store,
   scale,
@@ -10,7 +23,7 @@ export default ({
   proteinHeight,
   height,
   draw,
-}) =>
+}) => {
   data.proteins.forEach((d, i) => {
     d3.select(`.chart`)
       .append(`rect`)
@@ -83,3 +96,8 @@ export default ({
         'pointer-events': `none`,
       })
   })
+}
+
+/*----------------------------------------------------------------------------*/
+
+export default setupProteins

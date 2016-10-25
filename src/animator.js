@@ -1,3 +1,5 @@
+// @flow
+
 import * as d3 from 'd3'
 import { shouldAnimationFinish, calculateNextCoordinate } from './animation'
 import { dim, halfPixel } from './spatial'
@@ -5,7 +7,26 @@ import { updateStats } from './stats'
 
 let totalAnimationIterations = 30
 
-let animator = ({
+type TAnimatorArgs = {
+  store: Object,
+  data: Object,
+  yAxisOffset: number,
+  xAxisOffset: number,
+  statsBoxWidth: number,
+  height: number,
+  width: number,
+  domainWidth: number,
+  scale: number,
+  proteinHeight: number,
+  numXTicks: number,
+  mutationChartLines: Object,
+  mutationChartCircles: Object,
+  consequences: Object,
+  impacts: Object,
+  consequenceColors: Object,
+}
+type TAnimator = (args: TAnimatorArgs) => Function
+let animator: TAnimator = ({
   store,
   data,
   yAxisOffset,
@@ -120,6 +141,7 @@ let animator = ({
       mutationChartCircles,
       height,
       xAxisOffset,
+      visibleMutations: null,
     })
 
     updateStats({
@@ -141,7 +163,20 @@ let animator = ({
 
 }
 
-let animateScaleY = ({
+type TAnimateScaleYArgs = {
+  data: Object,
+  consequenceFilters: Array<string>,
+  impactFilters: Array<string>,
+  min: number,
+  max: number,
+  mutationChartLines: Object,
+  mutationChartCircles: Object,
+  height: number,
+  xAxisOffset: number,
+  visibleMutations: ?Array<Object>,
+}
+type TAnimateScaleY = (args: TAnimateScaleYArgs) => void
+let animateScaleY: TAnimateScaleY = ({
   data,
   consequenceFilters,
   impactFilters,

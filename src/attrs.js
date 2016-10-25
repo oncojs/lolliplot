@@ -1,3 +1,5 @@
+// @flow
+
 import { select } from 'd3-selection'
 
 let attrsFunction = (selection, map) =>
@@ -11,6 +13,6 @@ let attrsObject = (selection, map) => {
   return selection
 }
 
-export default function (map) {
+export default function (map: any) {
   return (typeof map === `function` ? attrsFunction : attrsObject)(this, map)
 }
