@@ -117,9 +117,11 @@ let proteinLolliplot: TProteinLolliplot = ({
     .attrs({
       class: `chart-zoom-area`,
       x: yAxisOffset,
-      y: 0,
-      ...dim(xAxisLength, height - xAxisOffset),
+      y: halfPixel,
+      ...dim(xAxisLength, height - xAxisOffset + proteinHeight - halfPixel),
       fill: `white`,
+      stroke: `rgb(181, 181, 181)`,
+      'stroke-width': 1,
     })
 
   // yAxis
@@ -212,6 +214,7 @@ let proteinLolliplot: TProteinLolliplot = ({
     proteinHeight,
     scale,
     maxDonors,
+    store,
   })
 
   let draw = animator({
@@ -244,6 +247,10 @@ let proteinLolliplot: TProteinLolliplot = ({
     selectedMutationClass,
     consequences,
     impacts,
+    mutationChartLines,
+    mutationChartCircles,
+    height,
+    xAxisOffset,
   })
 
   let reset = () => {

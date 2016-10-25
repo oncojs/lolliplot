@@ -4,6 +4,7 @@ import * as d3 from 'd3'
 import groupByType from './groupByType'
 import { updateMutations } from './mutations'
 import theme from './theme'
+import { animateScaleY } from './animator'
 
 // TODO: place in theme?
 let impactsColors = {
@@ -23,6 +24,10 @@ type TSetupStatsArgs = {
   selectedMutationClass: string,
   consequences: Object,
   impacts: Object,
+  mutationChartLines: Object,
+  mutationChartCircles: Object,
+  height: number,
+  xAxisOffset: number,
 }
 type TSetupStats = (args: TSetupStatsArgs) => void
 let setupStats: TSetupStats = ({
@@ -36,6 +41,10 @@ let setupStats: TSetupStats = ({
   selectedMutationClass,
   consequences,
   impacts,
+  mutationChartLines,
+  mutationChartCircles,
+  height,
+  xAxisOffset,
 }) => {
   // Stats Bar
 
@@ -43,6 +52,9 @@ let setupStats: TSetupStats = ({
     .append(`div`)
     .attr(`id`, `mutation-stats`)
     .style(`display`, hideStats ? `none` : `block`)
+    .style(`background-color`, `white`)
+    .style(`border`, `1px solid rgb(186, 186, 186)`)
+    .style(`padding`, `13px`)
 
   stats
     .style(`position`, `absolute`)
@@ -92,10 +104,15 @@ let setupStats: TSetupStats = ({
       .append(`div`)
       .html(`
         <span id="toggle-consequence-${type}" data-checked="true" style="background-color: ${consequenceColors[type]}; border: 2px solid ${consequenceColors[type]}; display: inline-block; width: 23px; cursor: pointer; margin-right: 6px;">&nbsp;</span>
-        <span class="consquence-counts-${type}">${type}: <b>${consequences[type].length}</b> / <b>${consequences[type].length}</b></span>
+        <span>${type}:</span>
+        <span style="margin: 0 10px 0 auto;" class="consquence-counts-${type}">
+          <b>${consequences[type].length}</b> / <b>${consequences[type].length}</b>
+        </span>
       `)
       .style(`margin-top`, `6px`)
       .style(`font-size`, `14px`)
+      .style(`display`, `flex`)
+      .style(`align-items`, `center`)
       .on(`click`, () => {
         // Bail if not the checkbox above
         if (!d3.event.target.id.includes(`toggle-consequence`)) return
@@ -117,7 +134,18 @@ let setupStats: TSetupStats = ({
           : [...consequenceFilters, type],
         })
 
-        updateStats({ store, data, consequences, impacts, consequenceColors })
+        updateStats({
+          store,
+          data,
+          consequences,
+          impacts,
+          consequenceColors,
+          mutationChartLines,
+          mutationChartCircles,
+          height,
+          xAxisOffset,
+        })
+
         updateMutations({ checked, mutationClass: `consequence`, type, data })
       })
   })
@@ -135,10 +163,15 @@ let setupStats: TSetupStats = ({
       .append(`div`)
       .html(`
         <span id="toggle-impacts-${type}" data-checked="true" style="background-color: ${impactsColors[type] || impactsColors.default}; border: 2px solid ${impactsColors[type] || impactsColors.default}; display: inline-block; width: 23px; cursor: pointer; margin-right: 6px;">&nbsp;</span>
-        <span class="impacts-counts-${type}">${type}: <b>${impacts[type].length}</b> / <b>${impacts[type].length}</b></span>
+        <span>${type}:</span>
+        <span style="margin: 0 10px 0 auto;" class="impacts-counts-${type}">
+          <b>${impacts[type].length}</b> / <b>${impacts[type].length}</b>
+        </span>
       `)
       .style(`margin-top`, `6px`)
       .style(`font-size`, `14px`)
+      .style(`display`, `flex`)
+      .style(`align-items`, `center`)
       .on(`click`, () => {
         // Bail if not the checkbox above
         if (!d3.event.target.id.includes(`toggle-impacts`)) return
@@ -160,16 +193,47 @@ let setupStats: TSetupStats = ({
           : [...impactFilters, type],
         })
 
-        updateStats({ store, data, consequences, impacts, consequenceColors })
+        updateStats({
+          store,
+          data,
+          consequences,
+          impacts,
+          consequenceColors,
+          mutationChartLines,
+          mutationChartCircles,
+          height,
+          xAxisOffset,
+        })
+
         updateMutations({ checked, mutationClass: `impact`, type, data })
       })
   })
 }
 
-type TUpdateStatsArgs = { store: Object, data: Object, consequences: Object, impacts: Object, consequenceColors: Object }
+type TUpdateStatsArgs = {
+  store: Object,
+  data: Object,
+  consequences: Object,
+  impacts: Object,
+  consequenceColors: Object,
+  mutationChartLines: Object,
+  mutationChartCircles: Object,
+  height: number,
+  xAxisOffset: number,
+}
 type TUpdateStats = (args: TUpdateStatsArgs) => void
-let updateStats: TUpdateStats = ({ store, data, consequences, impacts, consequenceColors }) => {
-  let { min, max, consequenceFilters, impactFilters } = store.getState()
+let updateStats: TUpdateStats = ({
+  store,
+  data,
+  consequences,
+  impacts,
+  consequenceColors,
+  mutationChartLines,
+  mutationChartCircles,
+  height,
+  xAxisOffset,
+}) => {
+  let { min, max, consequenceFilters, impactFilters, animating } = store.getState()
 
   let visibleMutations = data.mutations.filter(d =>
     (d.x > min && d.x < max) &&
@@ -183,7 +247,7 @@ let updateStats: TUpdateStats = ({ store, data, consequences, impacts, consequen
   Object.keys(consequences).map(type => {
     if (!visibleConsequences[type]) {
       d3.select(`.consquence-counts-${type}`)
-        .html(`${type}: <b>0</b> / <b>${consequences[type].length}</b> `)
+        .html(`<b>0</b> / <b>${consequences[type].length}</b> `)
     } else {
       d3.select(`#toggle-consequence-${type}`)
         .attr(`data-checked`, `true`)
@@ -194,7 +258,7 @@ let updateStats: TUpdateStats = ({ store, data, consequences, impacts, consequen
   Object.keys(impacts).map(type => {
     if (!visibleImpacts[type]) {
       d3.select(`.impacts-counts-${type}`)
-        .html(`${type}: <b>0</b> / <b>${impacts[type].length}</b>`)
+        .html(`<b>0</b> / <b>${impacts[type].length}</b>`)
     } else {
       d3.select(`#toggle-impacts-${type}`)
         .attr(`data-checked`, `true`)
@@ -210,7 +274,7 @@ let updateStats: TUpdateStats = ({ store, data, consequences, impacts, consequen
     .filter(type => !consequenceFilters.includes(type))
     .map(type => {
       d3.select(`.consquence-counts-${type}`)
-        .html(`${type}: <b>${visibleConsequences[type].length}</b> / <b>${consequences[type].length}</b>`)
+        .html(`<b>${visibleConsequences[type].length}</b> / <b>${consequences[type].length}</b>`)
     })
 
   Object
@@ -218,8 +282,23 @@ let updateStats: TUpdateStats = ({ store, data, consequences, impacts, consequen
     .filter(type => !impactFilters.includes(type))
     .map(type => {
       d3.select(`.impacts-counts-${type}`)
-        .html(`${type}: <b>${visibleImpacts[type].length}</b> / <b>${impacts[type].length}</b>`)
+        .html(`<b>${visibleImpacts[type].length}</b> / <b>${impacts[type].length}</b>`)
       })
+
+  if (!animating) {
+    animateScaleY({
+      data,
+      consequenceFilters,
+      impactFilters,
+      min,
+      max,
+      mutationChartLines,
+      mutationChartCircles,
+      height,
+      xAxisOffset,
+      visibleMutations,
+    })
+  }
 }
 
 /*----------------------------------------------------------------------------*/

@@ -13,6 +13,7 @@ let setupMutations = ({
   proteinHeight,
   scale,
   maxDonors,
+  store,
 }) => {
   let mutationChartLines = d3.select(`.chart`)
     .append(`g`)
@@ -45,37 +46,41 @@ let setupMutations = ({
       fill: d => consequenceColors[d.consequence],
     })
     .on(`mouseover`, function (d) {
-      d3.select(`.tooltip`)
-        .style(`pointer-events`, `none`)
-        .style(`left`, d3.event.pageX + 20 + `px`)
-        .style(`top`, d3.event.pageY - 22 + `px`)
-        .html(`
-          <div>Mutation ID: ${d.id}</div>
-          <div># of Cases: ${d.donors}</div>
-          <div>Amino Acid Change: Arg<b>${d.x}</b>Ter</div>
-          <div>Functional Impact: ${d.impact}</div>
-        `)
+      if (!store.getState().animating) {
+        d3.select(`.tooltip`)
+          .style(`pointer-events`, `none`)
+          .style(`left`, d3.event.pageX + 20 + `px`)
+          .style(`top`, d3.event.pageY - 22 + `px`)
+          .html(`
+            <div>Mutation ID: ${d.id}</div>
+            <div># of Cases: ${d.donors}</div>
+            <div>Amino Acid Change: Arg<b>${d.x}</b>Ter</div>
+            <div>Functional Impact: ${d.impact}</div>
+          `)
 
-      let el = d3.select(this)
+        let el = d3.select(this)
 
-      d.pR = +el.attr(`r`)
-      d.pFill = el.attr(`fill`)
+        d.pR = +el.attr(`r`)
+        d.pFill = el.attr(`fill`)
 
-      el.attr(`cursor`, `pointer`)
-        .attr(`filter`, `url(#drop-shadow)`)
-        .transition()
-        .attr(`r`, d.pR + 8)
-        .attr(`fill`, d3.color(el.attr(`fill`)).brighter())
+        el.attr(`cursor`, `pointer`)
+          .attr(`filter`, `url(#drop-shadow)`)
+          .transition()
+          .attr(`r`, d.pR + 8)
+          .attr(`fill`, d3.color(el.attr(`fill`)).brighter())
+      }
     })
     .on(`mouseout`, function (d) {
-      d3.select(`.tooltip`).style(`left`, `-9999px`)
+      if (!store.getState().animating) {
+        d3.select(`.tooltip`).style(`left`, `-9999px`)
 
-      let el = d3.select(this)
+        let el = d3.select(this)
 
-      el.attr(`filter`, null)
-        .transition()
-        .attr(`r`, d.pR)
-        .attr(`fill`, d.pFill)
+        el.attr(`filter`, null)
+          .transition()
+          .attr(`r`, d.pR)
+          .attr(`fill`, d.pFill)
+      }
     })
     .on(`click`, clickHandler)
 
