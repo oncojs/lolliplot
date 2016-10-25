@@ -211,6 +211,7 @@ let proteinLolliplot: TProteinLolliplot = ({
     height,
     proteinHeight,
     scale,
+    maxDonors,
   })
 
   let draw = animator({

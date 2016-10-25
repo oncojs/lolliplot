@@ -12,6 +12,7 @@ let setupMutations = ({
   height,
   proteinHeight,
   scale,
+  maxDonors,
 }) => {
   let mutationChartLines = d3.select(`.chart`)
     .append(`g`)
@@ -40,7 +41,7 @@ let setupMutations = ({
       'clip-path': `url(#chart-clip)`,
       cx: d => (d.x * scale) + yAxisOffset + halfPixel,
       cy: d => scaleLinearY(d.donors),
-      r: d => Math.max(3, d.donors / 2),
+      r: d => Math.max(3, (d.donors / maxDonors) * 10),
       fill: d => consequenceColors[d.consequence],
     })
     .on(`mouseover`, function (d) {

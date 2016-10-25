@@ -86,30 +86,6 @@ let animator = ({
         })
     })
 
-    let visibleMutations = data.mutations.filter(d =>
-      (d.x > min && d.x < max) &&
-      !consequenceFilters.includes(d.consequence) &&
-      !impactFilters.includes(d.impact)
-    )
-
-    let maxDonors = Math.max(...visibleMutations.map(x => x.donors))
-
-    let scaleLinearY = d3.scaleLinear()
-      .domain([0, Math.round(maxDonors + 5)])
-      .range([height - xAxisOffset, 0])
-
-    // Mutations
-    mutationChartLines
-      .attr(`x1`, d => scaleLinear(d.x))
-      .attr(`x2`, d => scaleLinear(d.x))
-      .transition()
-      .attr(`y2`, d => scaleLinearY(d.donors))
-
-    mutationChartCircles
-      .attr(`cx`, d => scaleLinear(d.x))
-      .transition()
-      .attr(`cy`, d => scaleLinearY(d.donors))
-
     // Horizontal ticks
 
     for (let i = 1; i < numXTicks; i++) {
@@ -118,25 +94,6 @@ let animator = ({
         .text(Math.round((length * i) + min))
     }
 
-    // Vertical ticks
-
-    let numYTicks = d3.selectAll(`[class^='yTick-text']`).size()
-
-    for (let i = 1; i < numYTicks + 1; i += 1) {
-      d3.select(`.yTick-text-${i}`)
-        .transition()
-        .attr(`y`, scaleLinearY(i) + 3)
-
-      d3.select(`.yTick-line-${i}`)
-        .transition()
-        .attr(`y1`, scaleLinearY(i))
-        .attr(`y2`, scaleLinearY(i))
-    }
-
-    // Stats
-
-    updateStats({ store, data, consequences, impacts })
-
     // Minimap zoom area
 
     d3.select(`.minimap-zoom-area`)
@@ -144,6 +101,54 @@ let animator = ({
         x: (min * scale) + yAxisOffset + halfPixel,
         width: Math.max(1, ((max - min) * scale) - 1),
       })
+
+    let visibleMutations = data.mutations.filter(d =>
+      (d.x > min && d.x < max) &&
+      !consequenceFilters.includes(d.consequence) &&
+      !impactFilters.includes(d.impact)
+    )
+
+    mutationChartLines
+      .attr(`x1`, d => scaleLinear(d.x))
+      .attr(`x2`, d => scaleLinear(d.x))
+
+    mutationChartCircles
+      .attr(`cx`, d => scaleLinear(d.x))
+
+    if (visibleMutations.length) {
+
+      let maxDonors = Math.max(...visibleMutations.map(x => x.donors))
+
+      let scaleLinearY = d3.scaleLinear()
+        .domain([0, Math.round(maxDonors + 5)])
+        .range([height - xAxisOffset, 0])
+
+      mutationChartLines
+        .transition()
+        .attr(`y2`, d => scaleLinearY(d.donors))
+
+      mutationChartCircles
+        .transition()
+        .attr(`cy`, d => scaleLinearY(d.donors))
+        .attr(`r`, d => Math.max(3, (d.donors / maxDonors) * 10))
+
+      // Vertical ticks
+
+      let numYTicks = d3.selectAll(`[class^='yTick-text']`).size()
+
+      for (let i = 1; i < numYTicks + 1; i += 1) {
+        d3.select(`.yTick-text-${i}`)
+          .transition()
+          .attr(`y`, scaleLinearY(i) + 3)
+
+        d3.select(`.yTick-line-${i}`)
+          .transition()
+          .attr(`y1`, scaleLinearY(i))
+          .attr(`y2`, scaleLinearY(i))
+      }
+    }
+
+    updateStats({ store, data, consequences, impacts })
 
     if (store.getState().animating) window.requestAnimationFrame(draw)
   }
