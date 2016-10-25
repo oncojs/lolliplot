@@ -34,7 +34,7 @@ export default ({ svg, height, yAxisOffset, xAxisOffset, xAxisLength, proteinHei
       x: yAxisOffset + halfPixel,
       y: height - xAxisOffset + proteinHeight + 20 + halfPixel,
       ...dim(xAxisLength - 1, 40 - 1),
-      fill: `rgba(162, 255, 196, 0.88)`,
+      fill: `rgb(196, 245, 255)`,
       'pointer-events': `none`,
     })
 

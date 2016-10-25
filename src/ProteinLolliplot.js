@@ -55,7 +55,7 @@ let proteinLolliplot: TProteinLolliplot = ({
   let yAxisOffset = 45
   let xAxisOffset = 200
 
-  let statsBoxWidth = hideStats ? 0 : 300
+  let statsBoxWidth = hideStats ? 0 : 250
   let proteinHeight = 40
 
   let xAxisLength = width - yAxisOffset - statsBoxWidth

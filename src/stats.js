@@ -55,6 +55,7 @@ let setupStats: TSetupStats = ({
     .style(`background-color`, `white`)
     .style(`border`, `1px solid rgb(186, 186, 186)`)
     .style(`padding`, `13px`)
+    .style(`width`, `${statsBoxWidth}px`)
 
   stats
     .style(`position`, `absolute`)

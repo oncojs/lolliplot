@@ -122,7 +122,17 @@ let animator = ({
       xAxisOffset,
     })
 
-    updateStats({ store, data, consequences, impacts, consequenceColors })
+    updateStats({
+      store,
+      data,
+      consequences,
+      impacts,
+      consequenceColors,
+      mutationChartLines,
+      mutationChartCircles,
+      height,
+      xAxisOffset,
+    })
 
     if (store.getState().animating) window.requestAnimationFrame(draw)
   }
