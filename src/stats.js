@@ -117,7 +117,7 @@ let setupStats: TSetupStats = ({
           : [...consequenceFilters, type],
         })
 
-        updateStats({ store, data, consequences, impacts })
+        updateStats({ store, data, consequences, impacts, consequenceColors })
         updateMutations({ checked, mutationClass: `consequence`, type, data })
       })
   })
@@ -160,15 +160,15 @@ let setupStats: TSetupStats = ({
           : [...impactFilters, type],
         })
 
-        updateStats({ store, data, consequences, impacts })
+        updateStats({ store, data, consequences, impacts, consequenceColors })
         updateMutations({ checked, mutationClass: `impact`, type, data })
       })
   })
 }
 
-type TUpdateStatsArgs = { store: Object, data: Object, consequences: Object, impacts: Object }
+type TUpdateStatsArgs = { store: Object, data: Object, consequences: Object, impacts: Object, consequenceColors: Object }
 type TUpdateStats = (args: TUpdateStatsArgs) => void
-let updateStats: TUpdateStats = ({ store, data, consequences, impacts }) => {
+let updateStats: TUpdateStats = ({ store, data, consequences, impacts, consequenceColors }) => {
   let { min, max, consequenceFilters, impactFilters } = store.getState()
 
   let visibleMutations = data.mutations.filter(d =>
@@ -184,6 +184,10 @@ let updateStats: TUpdateStats = ({ store, data, consequences, impacts }) => {
     if (!visibleConsequences[type]) {
       d3.select(`.consquence-counts-${type}`)
         .html(`${type}: <b>0</b> / <b>${consequences[type].length}</b> `)
+    } else {
+      d3.select(`#toggle-consequence-${type}`)
+        .attr(`data-checked`, `true`)
+        .style(`background-color`, consequenceColors[type])
     }
   })
 
@@ -191,6 +195,10 @@ let updateStats: TUpdateStats = ({ store, data, consequences, impacts }) => {
     if (!visibleImpacts[type]) {
       d3.select(`.impacts-counts-${type}`)
         .html(`${type}: <b>0</b> / <b>${impacts[type].length}</b>`)
+    } else {
+      d3.select(`#toggle-impacts-${type}`)
+        .attr(`data-checked`, `true`)
+        .style(`background-color`, impactsColors[type] || impactsColors.default)
     }
   })
 

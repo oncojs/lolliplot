@@ -21,6 +21,7 @@ let animator = ({
   mutationChartCircles,
   consequences,
   impacts,
+  consequenceColors,
 }) => {
 
   let draw = () => {
@@ -148,7 +149,7 @@ let animator = ({
       }
     }
 
-    updateStats({ store, data, consequences, impacts })
+    updateStats({ store, data, consequences, impacts, consequenceColors })
 
     if (store.getState().animating) window.requestAnimationFrame(draw)
   }

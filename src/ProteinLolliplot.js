@@ -230,6 +230,7 @@ let proteinLolliplot: TProteinLolliplot = ({
     mutationChartCircles,
     consequences,
     impacts,
+    consequenceColors,
   })
 
   setupStats({
@@ -254,9 +255,7 @@ let proteinLolliplot: TProteinLolliplot = ({
       impactFilters: [],
     })
 
-    d3.selectAll(`.mutation-filter`).property(`checked`, true)
-
-    updateStats({ store, data, consequences, impacts })
+    updateStats({ store, data, consequences, impacts, consequenceColors })
     updateMutations({ checked: true, data })
     draw()
   }
