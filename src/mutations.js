@@ -124,7 +124,10 @@ let setupMutations: TSetupMutations = ({
         x1: (d.x * scale) + yAxisOffset,
         y1: height - xAxisOffset + proteinHeight + 60,
         x2: (d.x * scale) + yAxisOffset + halfPixel,
-        y2: height - xAxisOffset + proteinHeight - (d.donors * 1.5) + 60,
+        y2: Math.max(
+          height - xAxisOffset + proteinHeight - (d.donors * 4.5) + 60,
+          height - xAxisOffset + proteinHeight + 20,
+        ),
         stroke: theme.black,
         'pointer-events': `none`,
       })
