@@ -8,7 +8,8 @@ type TSetupMutationsArgs = {
   consequenceColors: Object,
   scaleLinearY: Function,
   onMutationClick: Function,
-  onMutationHover: ?Function,
+  onMutationMouseover: ?Function,
+  onMutationMouseout: ?Function,
   data: Object,
   yAxisOffset: number,
   xAxisOffset: number,
@@ -24,7 +25,8 @@ let setupMutations: TSetupMutations = ({
   consequenceColors,
   scaleLinearY,
   onMutationClick,
-  onMutationHover,
+  onMutationMouseover,
+  onMutationMouseout,
   data,
   yAxisOffset,
   xAxisOffset,
@@ -69,8 +71,8 @@ let setupMutations: TSetupMutations = ({
     })
     .on(`mouseover`, function (d) {
       if (!store.getState().animating) {
-        if (onMutationHover) {
-          onMutationHover(d)
+        if (onMutationMouseover) {
+          onMutationMouseover(d)
         } else {
           d3.select(`.tooltip`)
             .style(`pointer-events`, `none`)
@@ -101,6 +103,8 @@ let setupMutations: TSetupMutations = ({
     .on(`mouseout`, function (d) {
       if (!store.getState().animating) {
         d3.select(`.tooltip`).style(`left`, `-9999px`)
+
+        if (onMutationMouseout) onMutationMouseout(d)
 
         if (d.id !== mutationId) {
           let el = d3.select(this)

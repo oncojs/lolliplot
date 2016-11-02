@@ -21,8 +21,10 @@ d3.selection.prototype.attrs = attrs
 
 type TProteinLolliplotArgs = {
   onMutationClick: Function,
-  onMutationHover: ?Function,
-  onProteinHover: ?Function,
+  onMutationMouseover: ?Function,
+  onMutationMouseout: ?Function,
+  onProteinMouseover: ?Function,
+  onProteinMouseout: ?Function,
   data: Object,
   selector: string,
   height: number,
@@ -35,8 +37,10 @@ type TProteinLolliplotArgs = {
 type TProteinLolliplot = (args: TProteinLolliplotArgs) => Object
 let proteinLolliplot: TProteinLolliplot = ({
   onMutationClick,
-  onMutationHover,
-  onProteinHover,
+  onMutationMouseover,
+  onMutationMouseout,
+  onProteinMouseover,
+  onProteinMouseout,
   data,
   selector,
   height,
@@ -222,7 +226,8 @@ let proteinLolliplot: TProteinLolliplot = ({
     consequenceColors,
     scaleLinearY,
     onMutationClick,
-    onMutationHover,
+    onMutationMouseover,
+    onMutationMouseout,
     mutationId,
     data,
     yAxisOffset,
@@ -312,7 +317,8 @@ let proteinLolliplot: TProteinLolliplot = ({
   })
 
   setupProteins({
-    onProteinHover,
+    onProteinMouseover,
+    onProteinMouseout,
     data,
     store,
     scale,
