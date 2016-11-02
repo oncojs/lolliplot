@@ -92,7 +92,7 @@ let animator: TAnimator = ({
 
       // Protein bars
 
-      d3.select(`.range-${d.id}`)
+      d3.select(`.range-${d.id}-${d.start}-${d.end}`)
         .attrs({
           x:  Math.max(yAxisOffset, x) + halfPixel,
           y: height - xAxisOffset + halfPixel,
@@ -102,7 +102,7 @@ let animator: TAnimator = ({
 
       // Protein names
 
-      d3.select(`.protein-name-${d.id}`)
+      d3.select(`.protein-name-${d.id}-${d.start}-${d.end}`)
         .attrs({
           x: barWidth + yAxisOffset < yAxisOffset ? x : Math.max(yAxisOffset, x),
         })

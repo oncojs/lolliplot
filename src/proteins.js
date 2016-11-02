@@ -33,7 +33,7 @@ let setupProteins: TSetupProteins = ({
       .append(`rect`)
       .attrs({
         'clip-path': `url(#chart-clip)`,
-        class: `range-${d.id}`,
+        class: `range-${d.id}-${d.start}-${d.end}`,
         x: (d.start * scale) + yAxisOffset + halfPixel,
         y: height - xAxisOffset + halfPixel,
         ...dim(((d.end - d.start) * scale) - 1, proteinHeight - halfPixel),
@@ -84,7 +84,7 @@ let setupProteins: TSetupProteins = ({
       .append(`text`)
       .text(d.id.toUpperCase())
       .attrs({
-        class: `protein-name-${d.id}`,
+        class: `protein-name-${d.id}-${d.start}-${d.end}`,
         'clip-path': `url(#chart-clip)`,
         x: (d.start * scale) + yAxisOffset,
         y: height - xAxisOffset + proteinHeight,
