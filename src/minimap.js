@@ -5,11 +5,14 @@ import theme from './theme'
 
 type TSetupMinimapArgs = {
   svg: Object,
+  width: number,
   height: number,
   yAxisOffset: number,
   xAxisOffset: number,
   xAxisLength: number,
   proteinHeight: number,
+  domainWidth: number,
+  statsBoxWidth: number,
 }
 type TSetupMinimap = (args: TSetupMinimapArgs) => void
 let setupMinimap: TSetupMinimap = props => {
@@ -52,7 +55,12 @@ let setupMinimap: TSetupMinimap = props => {
   props.svg
     .append(`g`)
     .append(`text`)
-    .text(`Click and drag over an area, or select a protein to zoom the chart`)
+    .text(`
+      Three ways to zoom in or out:
+      1) Click on a domain above.
+      2) Click and drag over the main chart above.
+      3) Click and drag over the gene map below.
+    `)
     .attrs({
       class: `minimap-label`,
       x: props.yAxisOffset,
@@ -70,6 +78,50 @@ let setupMinimap: TSetupMinimap = props => {
       x2: props.xAxisLength + props.yAxisOffset,
       y2: props.height - props.xAxisOffset + props.proteinHeight + 60 - halfPixel,
       stroke: theme.black,
+    })
+
+  props.svg
+    .append(`g`)
+    .append(`text`)
+    .text(`aa 0`)
+    .attrs({
+      x: props.yAxisOffset,
+      y: props.height - props.xAxisOffset + props.proteinHeight + 90,
+      'font-size': `11px`,
+      'text-anchor': `middle`,
+    })
+
+  props.svg
+    .append(`g`)
+    .append(`text`)
+    .text(`aa ${props.domainWidth}`)
+    .attrs({
+      x: props.width - props.statsBoxWidth,
+      y: props.height - props.xAxisOffset + props.proteinHeight + 90,
+      'font-size': `11px`,
+      'text-anchor': `middle`,
+    })
+
+  props.svg
+    .append(`g`)
+    .append(`text`)
+    .text(`This track represents the whole gene.`)
+    .attrs({
+      x: (props.width - props.statsBoxWidth) / 2,
+      y: props.height - props.xAxisOffset + props.proteinHeight + 90,
+      'font-size': `11px`,
+      'text-anchor': `middle`,
+    })
+
+  props.svg
+    .append(`g`)
+    .append(`text`)
+    .text(`The shaded blue area indicates the current zoom level.`)
+    .attrs({
+      x: (props.width - props.statsBoxWidth) / 2,
+      y: props.height - props.xAxisOffset + props.proteinHeight + 105,
+      'font-size': `11px`,
+      'text-anchor': `middle`,
     })
 }
 

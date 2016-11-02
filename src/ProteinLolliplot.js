@@ -21,6 +21,8 @@ d3.selection.prototype.attrs = attrs
 
 type TProteinLolliplotArgs = {
   onMutationClick: Function,
+  onMutationHover: ?Function,
+  onProteinHover: ?Function,
   data: Object,
   selector: string,
   height: number,
@@ -28,10 +30,13 @@ type TProteinLolliplotArgs = {
   domainWidth: number,
   hideStats: bool,
   selectedMutationClass: string,
+  mutationId: string,
 }
 type TProteinLolliplot = (args: TProteinLolliplotArgs) => Object
 let proteinLolliplot: TProteinLolliplot = ({
   onMutationClick,
+  onMutationHover,
+  onProteinHover,
   data,
   selector,
   height,
@@ -39,6 +44,7 @@ let proteinLolliplot: TProteinLolliplot = ({
   domainWidth,
   hideStats,
   selectedMutationClass,
+  mutationId,
 } = {}) => {
 
   // Similar to a React target element
@@ -191,7 +197,17 @@ let proteinLolliplot: TProteinLolliplot = ({
       stroke: theme.black,
     })
 
-  setupMinimap({ svg, height, yAxisOffset, xAxisOffset, xAxisLength, proteinHeight })
+  setupMinimap({
+    svg,
+    width,
+    height,
+    yAxisOffset,
+    xAxisOffset,
+    xAxisLength,
+    proteinHeight,
+    domainWidth,
+    statsBoxWidth,
+  })
 
   d3.select(`.chart`)
     .append(`text`)
@@ -206,6 +222,8 @@ let proteinLolliplot: TProteinLolliplot = ({
     consequenceColors,
     scaleLinearY,
     onMutationClick,
+    onMutationHover,
+    mutationId,
     data,
     yAxisOffset,
     xAxisOffset,
@@ -294,6 +312,7 @@ let proteinLolliplot: TProteinLolliplot = ({
   })
 
   setupProteins({
+    onProteinHover,
     data,
     store,
     scale,

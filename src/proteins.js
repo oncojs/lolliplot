@@ -4,6 +4,7 @@ import * as d3 from 'd3'
 import { dim, halfPixel } from './spatial'
 
 type TSetupProteinsArgs = {
+  onProteinHover: ?Function,
   data: Object,
   store: Object,
   scale: number,
@@ -15,6 +16,7 @@ type TSetupProteinsArgs = {
 }
 type TSetupProteins = (args: TSetupProteinsArgs) => void
 let setupProteins: TSetupProteins = ({
+  onProteinHover,
   data,
   store,
   scale,
@@ -42,14 +44,18 @@ let setupProteins: TSetupProteins = ({
             cursor: `pointer`,
           })
 
-        d3.select(`.tooltip`)
-          .style(`left`, d3.event.pageX + 20 + `px`)
-          .style(`top`, d3.event.pageY - 22 + `px`)
-          .html(`
-            <div>${d.id}</div>
-            <div>${d.description}</div>
-            <div><b>Click to zoom</b></div>
-          `)
+        if (onProteinHover) {
+          onProteinHover(d)
+        } else {
+          d3.select(`.tooltip`)
+            .style(`left`, d3.event.pageX + 20 + `px`)
+            .style(`top`, d3.event.pageY - 22 + `px`)
+            .html(`
+              <div>${d.id}</div>
+              <div>${d.description}</div>
+              <div><b>Click to zoom</b></div>
+            `)
+        }
       })
       .on(`mouseout`, function() {
         d3.select(this)

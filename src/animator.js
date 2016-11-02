@@ -209,7 +209,6 @@ let animateScaleY: TAnimateScaleY = ({
     mutationChartCircles
       .transition()
       .attr(`cy`, d => scaleLinearY(d.donors))
-      .attr(`r`, d => Math.max(3, (d.donors / maxDonors) * 10))
 
     // Vertical ticks
 

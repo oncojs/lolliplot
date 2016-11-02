@@ -9,6 +9,7 @@ ProteinLolliplot({
   height: 450,
   // hideStats: true,
   domainWidth: 500,
+  mutationId: `MU10`,
 })
 
 /*----------------------------------------------------------------------------*/
@@ -27,5 +28,6 @@ range.oninput = event => {
     data: mockData(+event.target.value),
     clickHandler: d => console.dir(d),
     height: 450,
+    mutationId: `MU10`,
   })
 }

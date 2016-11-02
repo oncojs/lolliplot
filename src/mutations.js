@@ -8,6 +8,7 @@ type TSetupMutationsArgs = {
   consequenceColors: Object,
   scaleLinearY: Function,
   onMutationClick: Function,
+  onMutationHover: ?Function,
   data: Object,
   yAxisOffset: number,
   xAxisOffset: number,
@@ -16,20 +17,22 @@ type TSetupMutationsArgs = {
   scale: number,
   maxDonors: number,
   store: Object,
+  mutationId: string,
 }
 type TSetupMutations = (args: TSetupMutationsArgs) => Object
 let setupMutations: TSetupMutations = ({
   consequenceColors,
   scaleLinearY,
   onMutationClick,
+  onMutationHover,
   data,
   yAxisOffset,
   xAxisOffset,
   height,
   proteinHeight,
   scale,
-  maxDonors,
   store,
+  mutationId,
 }) => {
   let mutationChartLines = d3.select(`.chart`)
     .append(`g`)
@@ -58,44 +61,55 @@ let setupMutations: TSetupMutations = ({
       'clip-path': `url(#chart-clip)`,
       cx: d => (d.x * scale) + yAxisOffset + halfPixel,
       cy: d => scaleLinearY(d.donors),
-      r: d => Math.max(3, (d.donors / maxDonors) * 10),
-      fill: d => consequenceColors[d.consequence],
+      r: d => d.id === mutationId ? theme.mutationRadius + 8 : theme.mutationRadius,
+      fill: d => d.id === mutationId
+        ? d3.color(consequenceColors[d.consequence]).brighter().brighter()
+        : consequenceColors[d.consequence],
+      filter: d => d.id === mutationId ? `url(#drop-shadow)` : null,
     })
     .on(`mouseover`, function (d) {
       if (!store.getState().animating) {
-        d3.select(`.tooltip`)
-          .style(`pointer-events`, `none`)
-          .style(`left`, d3.event.pageX + 20 + `px`)
-          .style(`top`, d3.event.pageY - 22 + `px`)
-          .html(`
-            <div>Mutation ID: ${d.id}</div>
-            <div># of Cases: ${d.donors}</div>
-            <div>Amino Acid Change: Arg<b>${d.x}</b>Ter</div>
-            <div>Functional Impact: ${d.impact}</div>
-          `)
+        if (onMutationHover) {
+          onMutationHover(d)
+        } else {
+          d3.select(`.tooltip`)
+            .style(`pointer-events`, `none`)
+            .style(`left`, d3.event.pageX + 20 + `px`)
+            .style(`top`, d3.event.pageY - 22 + `px`)
+            .html(`
+              <div>Mutation ID: ${d.id}</div>
+              <div># of Cases: ${d.donors}</div>
+              <div>Amino Acid Change: Arg<b>${d.x}</b>Ter</div>
+              <div>Functional Impact: ${d.impact}</div>
+            `)
+        }
 
         let el = d3.select(this)
 
         d.pR = +el.attr(`r`)
         d.pFill = el.attr(`fill`)
 
-        el.attr(`cursor`, `pointer`)
-          .attr(`filter`, `url(#drop-shadow)`)
-          .transition()
-          .attr(`r`, d.pR + 8)
-          .attr(`fill`, d3.color(el.attr(`fill`)).brighter())
+        if (d.id !== mutationId) {
+          el.attr(`cursor`, `pointer`)
+            .attr(`filter`, `url(#drop-shadow)`)
+            .transition()
+            .attr(`r`, d.pR + 8)
+            .attr(`fill`, d3.color(el.attr(`fill`)).brighter())
+        }
       }
     })
     .on(`mouseout`, function (d) {
       if (!store.getState().animating) {
         d3.select(`.tooltip`).style(`left`, `-9999px`)
 
-        let el = d3.select(this)
+        if (d.id !== mutationId) {
+          let el = d3.select(this)
 
-        el.attr(`filter`, null)
-          .transition()
-          .attr(`r`, d.pR)
-          .attr(`fill`, d.pFill)
+          el.attr(`filter`, null)
+            .transition()
+            .attr(`r`, d.pR)
+            .attr(`fill`, d.pFill)
+        }
       }
     })
     .on(`click`, onMutationClick)
