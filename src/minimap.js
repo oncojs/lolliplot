@@ -25,7 +25,7 @@ let setupMinimap: TSetupMinimap = props => {
       y: props.height - props.xAxisOffset + props.proteinHeight + 20,
       ...dim(props.xAxisLength, 50),
       stroke: `rgb(138, 138, 138)`,
-      fill: `white`,
+      fill: `rgb(212, 212, 212)`,
       cursor: `text`,
     })
 
@@ -47,8 +47,8 @@ let setupMinimap: TSetupMinimap = props => {
       class: `minimap-zoom-area`,
       x: props.yAxisOffset + halfPixel,
       y: props.height - props.xAxisOffset + props.proteinHeight + 20 + halfPixel,
-      ...dim(props.xAxisLength - 1, 40 - 1),
-      fill: `rgb(196, 245, 255)`,
+      ...dim(props.xAxisLength - 1, 50 - 1),
+      fill: `rgb(255, 255, 255)`,
       'pointer-events': `none`,
     })
 
@@ -105,21 +105,10 @@ let setupMinimap: TSetupMinimap = props => {
   props.svg
     .append(`g`)
     .append(`text`)
-    .text(`This track represents the whole gene.`)
+    .text(`This track represents the whole gene. The white area is the current zoom level.`)
     .attrs({
       x: (props.width - props.statsBoxWidth) / 2,
       y: props.height - props.xAxisOffset + props.proteinHeight + 90,
-      'font-size': `11px`,
-      'text-anchor': `middle`,
-    })
-
-  props.svg
-    .append(`g`)
-    .append(`text`)
-    .text(`The shaded blue area indicates the current zoom level.`)
-    .attrs({
-      x: (props.width - props.statsBoxWidth) / 2,
-      y: props.height - props.xAxisOffset + props.proteinHeight + 105,
       'font-size': `11px`,
       'text-anchor': `middle`,
     })

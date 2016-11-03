@@ -102,7 +102,7 @@ let setupProteins: TSetupProteins = ({
         x: (d.start * scale) + yAxisOffset,
         y: height - xAxisOffset + proteinHeight + 60,
         ...dim(((d.end - d.start) * scale), 10 - halfPixel),
-        fill: `hsl(${i * 100}, 80%, 70%)`,
+        fill: `hsl(${i * 100}, 80%, 90%)`,
         'pointer-events': `none`,
       })
   })
