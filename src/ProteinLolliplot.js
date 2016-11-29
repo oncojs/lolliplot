@@ -33,6 +33,8 @@ type TProteinLolliplotArgs = {
   hideStats: bool,
   selectedMutationClass: string,
   mutationId: string,
+  yAxisOffset: number,
+  xAxisOffset: number,
 }
 type TProteinLolliplot = (args: TProteinLolliplotArgs) => Object
 let proteinLolliplot: TProteinLolliplot = ({
@@ -49,6 +51,8 @@ let proteinLolliplot: TProteinLolliplot = ({
   hideStats,
   selectedMutationClass,
   mutationId,
+  yAxisOffset,
+  xAxisOffset,
 } = {}) => {
 
   // Similar to a React target element
@@ -61,8 +65,8 @@ let proteinLolliplot: TProteinLolliplot = ({
   domainWidth = domainWidth || 500
   selectedMutationClass = selectedMutationClass || `Consequence`
 
-  let yAxisOffset = 45
-  let xAxisOffset = 200
+  yAxisOffset = yAxisOffset || 45
+  xAxisOffset = yAxisOffset || 200
 
   let statsBoxWidth = hideStats ? 0 : 250
   let proteinHeight = 40
@@ -121,7 +125,7 @@ let proteinLolliplot: TProteinLolliplot = ({
 
   // Chart zoom area
 
-  d3.select(`.chart`)
+  let chart = d3.select(`.chart`)
     .append(`rect`)
     .attrs({
       class: `chart-zoom-area`,
@@ -256,6 +260,18 @@ let proteinLolliplot: TProteinLolliplot = ({
     consequences,
     impacts,
     consequenceColors,
+  })
+
+  chart.on(`mousewheel`, () => {
+    let { targetMin, targetMax } = store.getState()
+
+    store.update({
+      animating: true,
+      targetMin: Math.max(0, targetMin + d3.event.deltaY),
+      targetMax: Math.min(domainWidth, targetMax + d3.event.deltaY),
+    })
+
+    draw()
   })
 
   setupStats({

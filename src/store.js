@@ -1,7 +1,11 @@
 import { createStore } from 'redux'
 import { handleActions } from 'redux-actions'
 
-export default ({ domainWidth }) => {
+type TCreateStoreWrapperArgs = {
+  domainWidth: number,
+}
+type TCreateStoreWrapper = (args: TCreateStoreWrapperArgs) => Object
+let createStoreWrapper: TCreateStoreWrapper = ({ domainWidth }): Object => {
   let initialState = {
     animating: false,
     min: 0,
@@ -27,3 +31,5 @@ export default ({ domainWidth }) => {
 
   return store
 }
+
+export default createStoreWrapper
