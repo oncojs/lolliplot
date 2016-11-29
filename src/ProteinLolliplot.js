@@ -66,7 +66,7 @@ let proteinLolliplot: TProteinLolliplot = ({
   selectedMutationClass = selectedMutationClass || `Consequence`
 
   yAxisOffset = yAxisOffset || 45
-  xAxisOffset = yAxisOffset || 200
+  xAxisOffset = xAxisOffset || 200
 
   let statsBoxWidth = hideStats ? 0 : 250
   let proteinHeight = 40
@@ -125,7 +125,7 @@ let proteinLolliplot: TProteinLolliplot = ({
 
   // Chart zoom area
 
-  let chart = d3.select(`.chart`)
+  d3.select(`.chart`)
     .append(`rect`)
     .attrs({
       class: `chart-zoom-area`,
@@ -243,6 +243,30 @@ let proteinLolliplot: TProteinLolliplot = ({
     store,
   })
 
+  svg
+    .append(`g`)
+    .append(`rect`)
+    .attrs({
+      class: `minimap-slide-target`,
+      x: xAxisLength + yAxisOffset - 20,
+      y: height - xAxisOffset + proteinHeight + 25,
+      ...dim(15, 15),
+      fill: `rgb(255, 255, 255)`,
+      stroke: `rgb(57, 57, 57)`,
+      cursor: `move`,
+    })
+
+  svg
+    .append(`text`)
+    .text(`⟺`)
+    .attrs({
+      class: `minimap-slide-target-arrow`,
+      x: xAxisLength + yAxisOffset - 19,
+      y: height - xAxisOffset + proteinHeight + 36,
+      'font-size': `11px`,
+      'pointer-events': `none`,
+    })
+
   let draw = animator({
     store,
     data,
@@ -260,18 +284,6 @@ let proteinLolliplot: TProteinLolliplot = ({
     consequences,
     impacts,
     consequenceColors,
-  })
-
-  chart.on(`mousewheel`, () => {
-    let { targetMin, targetMax } = store.getState()
-
-    store.update({
-      animating: true,
-      targetMin: Math.max(0, targetMin + d3.event.deltaY),
-      targetMax: Math.min(domainWidth, targetMax + d3.event.deltaY),
-    })
-
-    draw()
   })
 
   setupStats({

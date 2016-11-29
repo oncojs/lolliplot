@@ -118,10 +118,22 @@ let animator: TAnimator = ({
 
     // Minimap zoom area
 
+    let minimapWidth = Math.max(1, ((max - min) * scale) - 1)
+
     d3.select(`.minimap-zoom-area`)
       .attrs({
         x: (min * scale) + yAxisOffset + halfPixel,
-        width: Math.max(1, ((max - min) * scale) - 1),
+        width: minimapWidth,
+      })
+
+    d3.select(`.minimap-slide-target`)
+      .attrs({
+        x: (min * scale) + yAxisOffset + halfPixel + minimapWidth - 20,
+      })
+
+    d3.select(`.minimap-slide-target-arrow`)
+      .attrs({
+        x: (min * scale) + yAxisOffset + halfPixel + minimapWidth - 19,
       })
 
     mutationChartLines

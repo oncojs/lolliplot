@@ -20,6 +20,10 @@ let createStoreWrapper: TCreateStoreWrapper = ({ domainWidth }): Object => {
     impactFilters: [],
     dragging: false,
     zoomStart: null,
+    sliding: false,
+    slideStart: null,
+    slideStartMin: null,
+    slideStartMax: null,
   }
 
   let reducer = handleActions({

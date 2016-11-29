@@ -54,6 +54,7 @@ let zoomHandlers = ({
   let minimap = document.querySelector(`.minimap`)
   let chart = document.querySelector(`.chart`)
   let chartZoomArea = document.querySelector(`.chart-zoom-area`)
+  let slideTarget = document.querySelector(`.minimap-slide-target`)
 
   let initDrag = ({ selector, y, height, fill }) => (event: Event) => {
     store.update({
@@ -91,7 +92,9 @@ let zoomHandlers = ({
   }))
 
   chart.addEventListener(`mouseup`, (event: Event) => {
-    let { dragging, zoomStart } = store.getState()
+    let { dragging, zoomStart, sliding } = store.getState()
+
+    if (sliding) store.update({ sliding: false })
 
     if (dragging) {
       let difference = event.offsetX - zoomStart
@@ -127,8 +130,24 @@ let zoomHandlers = ({
     }
   })
 
-  let dragMouse = selector => (event: Event) => {
-    let { dragging, zoomStart } = store.getState()
+  let dragMouse = (selector: string) => (event: Event) => {
+    let {
+      dragging,
+      zoomStart,
+      sliding,
+      slideStart,
+      slideStartMin,
+      slideStartMax,
+    } = store.getState()
+
+    if (sliding) {
+      store.update({
+        animating: true,
+        targetMin: Math.max(0, slideStartMin + event.offsetX - slideStart),
+        targetMax: Math.min(domainWidth, slideStartMax + event.offsetX - slideStart),
+      })
+      draw()
+    }
 
     if (dragging) {
       let difference = event.offsetX - zoomStart
@@ -141,6 +160,16 @@ let zoomHandlers = ({
       }
     }
   }
+
+  slideTarget.addEventListener(`mousedown`, (event: Event) => {
+    let { min, max } = store.getState()
+    store.update({
+      sliding: true,
+      slideStart: event.offsetX,
+      slideStartMin: min,
+      slideStartMax: max,
+    })
+  })
 
   chart.addEventListener(`mousemove`, dragMouse(`.minimap-zoom`))
   chartZoomArea.addEventListener(`mousemove`, dragMouse(`.chart-zoom`))
