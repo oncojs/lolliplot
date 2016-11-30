@@ -45,6 +45,13 @@
     "webpack": "^1.13.2",
     "webpack-dev-server": "^1.16.1"
   },
+  "peerDependencies": {
+    "babel-polyfill": "*",
+    "d3": "*",
+    "d3-selection": "*",
+    "redux": "*",
+    "redux-actions": "*"
+  },
   "dependencies": {
     "babel-polyfill": "^6.16.0",
     "d3": "^4.2.3",
