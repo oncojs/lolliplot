@@ -100,6 +100,14 @@ let animator: TAnimator = ({
           fill: `hsl(${i * 100}, 80%, 90%)`,
         })
 
+      d3.select(`.clip-range-${d.id}-${d.start}-${d.end}-rect`)
+        .attrs({
+          x:  Math.max(yAxisOffset, x) + halfPixel,
+          y: height - xAxisOffset + halfPixel,
+          ...dim(Math.max(0, barWidth - 1), proteinHeight - halfPixel),
+          fill: `hsl(${i * 100}, 80%, 90%)`,
+        })
+
       // Protein names
 
       d3.select(`.protein-name-${d.id}-${d.start}-${d.end}`)

@@ -345,6 +345,7 @@ let proteinLolliplot: TProteinLolliplot = ({
   })
 
   setupProteins({
+    defs,
     onProteinMouseover,
     onProteinMouseout,
     data,

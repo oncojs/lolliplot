@@ -4,6 +4,7 @@ import * as d3 from 'd3'
 import { dim, halfPixel } from './spatial'
 
 type TSetupProteinsArgs = {
+  defs: Object,
   onProteinMouseover: ?Function,
   onProteinMouseout: ?Function,
   data: Object,
@@ -17,6 +18,7 @@ type TSetupProteinsArgs = {
 }
 type TSetupProteins = (args: TSetupProteinsArgs) => void
 let setupProteins: TSetupProteins = ({
+  defs,
   onProteinMouseover,
   onProteinMouseout,
   data,
@@ -78,6 +80,19 @@ let setupProteins: TSetupProteins = ({
         draw()
       })
 
+    defs
+      .append(`g`)
+      .attr(`class`, `protein-text-clip-path`)
+      .append(`clipPath`)
+      .attr(`id`, `clip-range-${d.id}-${d.start}-${d.end}`)
+      .append(`rect`)
+      .attrs({
+        class: `clip-range-${d.id}-${d.start}-${d.end}-rect`,
+        x: (d.start * scale) + yAxisOffset + halfPixel,
+        y: height - xAxisOffset + halfPixel,
+        ...dim(((d.end - d.start) * scale) - 1, proteinHeight - halfPixel),
+      })
+
     // Protein Names
 
     d3.select(`.chart`)
@@ -85,7 +100,7 @@ let setupProteins: TSetupProteins = ({
       .text(d.id.toUpperCase())
       .attrs({
         class: `protein-name-${d.id}-${d.start}-${d.end}`,
-        'clip-path': `url(#chart-clip)`,
+        'clip-path': `url(#clip-range-${d.id}-${d.start}-${d.end})`,
         x: (d.start * scale) + yAxisOffset,
         y: height - xAxisOffset + proteinHeight,
         fill: `hsl(${i * 100}, 80%, 30%)`,
