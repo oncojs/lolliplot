@@ -48,10 +48,7 @@
   "dependencies": {
     "babel-polyfill": "^6.16.0",
     "d3": "^4.2.3",
-    "d3-selection-multi": "^1.0.0",
-    "lodash": "^4.16.4",
-    "react": "^15.0.1",
-    "react-dom": "^15.0.1",
+    "d3-selection": "^1.0.3",
     "redux": "^3.6.0",
     "redux-actions": "^0.12.0"
   }
