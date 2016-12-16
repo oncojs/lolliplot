@@ -11,20 +11,38 @@ Visualization to view relationship between common mutations and their location o
 yarn
 ```
 
+## Develop
+
+```
+npm start
+```
+
+Then go to http://localhost:8080/
+
 # API
 
 ```
 type TProteinLolliplotArgs = {
-  selector: string,
+  onMutationClick: Function,
+  onMutationMouseover: ?Function,
+  onMutationMouseout: ?Function,
+  onProteinMouseover: ?Function,
+  onProteinMouseout: ?Function,
   data: Object,
+  selector: string,
+  element: Object,
+  height: number,
+  width: number,
   domainWidth: number,
-  onMutationClick: ?Function,
-  height: ?number,
-  width: ?number,
-  hideStats: ?bool,
-  selectedMutationClass: ?string,
+  hideStats: bool,
+  selectedMutationClass: string,
+  mutationId: string,
+  yAxisOffset: number,
+  xAxisOffset: number,
 }
 ```
+
+`element`: the element which the viz will attach to. takes precedence over `selector`
 
 `selector`: the selector of the element to attach the chart to
 
