@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "start": "knit -- server",
-    "lint": "eslint src",
+    "lint": "eslint",
     "build": "webpack -p --config webpack.dist.config.js",
     "knit": "knit"
   },
@@ -40,6 +40,8 @@
     "babel-preset-react": "^6.0.15",
     "babel-preset-stage-0": "^6.0.15",
     "eslint": "^3.11.1",
+    "eslint-config-minimal": "^0.4.0",
+    "eslint-plugin-import": "latest",
     "eslint-plugin-react": "^6.8.0",
     "flow-bin": "^0.36.0",
     "react": "^15.4.1",
