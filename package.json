@@ -49,11 +49,11 @@
     "webpack-dev-server": "^1.16.1"
   },
   "peerDependencies": {
-    "babel-polyfill": "*",
-    "lodash": "^4.17.2"
+    "babel-polyfill": "*"
   },
   "dependencies": {
     "d3-selection": "^1.0.3",
+    "lodash.startcase": "^4.4.0",
     "redux": "^3.6.0",
     "redux-actions": "^0.12.0"
   }
