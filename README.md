@@ -35,21 +35,7 @@ let = {
 } = ProteinLolliplot(args)
 ```
 
-### Install
-
-```
-yarn
-```
-
-## Develop
-
-```
-npm start
-```
-
-Then go to http://localhost:8080/
-
-# API
+## API
 
 ```
 type TProteinLolliplotArgs = {
@@ -86,7 +72,7 @@ type TProteinLolliplotReturn = {
 }
 ```
 
-## Constructor Arguments
+### Constructor Arguments
 
 `d3`: Your supplied `d3` object (v3 || v4). **Required!**
 
@@ -120,7 +106,7 @@ type TProteinLolliplotReturn = {
 
 `onInit (optional)`: will run once everything has been setup
 
-### Mouse events
+#### Mouse events
 
 `onMutationClick (optional)`
 `onMutationMouseover (optional)`
@@ -129,7 +115,7 @@ type TProteinLolliplotReturn = {
 `onProteinMouseout (optional)`
 
 
-## Returned Object
+### Returned Object
 
 `reset`: Sets the most zoomed out position, and resets any filter options
 
@@ -140,3 +126,13 @@ type TProteinLolliplotReturn = {
 `remove`: Removes the chart from the DOM and any event handlers created during setup
 
 `store`: The redux store passed in during creation, or the default one if not
+
+## Development
+
+#### Install / Run Dev Server
+
+```
+yarn && yarn start
+```
+
+Then go to http://localhost:8080/
