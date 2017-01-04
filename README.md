@@ -48,6 +48,7 @@ type TProteinLolliplotArgs = {
   height: number,
   store?: Object,
   hideStats?: bool,
+  animate?: bool,
   selectedMutationClass?: string,
   mutationId?: string,
   yAxisOffset?: number,
@@ -94,6 +95,8 @@ type TProteinLolliplotReturn = {
 
 `hideStats (optional)`: if `true`, do not display the summary box next of the chart
 
+`animate (optional)`: animate the view to the new zoom area. defaults to `true`
+
 `selectedMutationClass (optional)`: sets the default filter on the mutation class (Consequence, Impact, etc)
 
 `mutationId (optional)`: will highlight the mutation matching this id
@@ -107,6 +110,8 @@ type TProteinLolliplotReturn = {
 `onInit (optional)`: will run once everything has been setup
 
 #### Mouse events
+
+Receive `(data, event)` as arguments.
 
 `onMutationClick (optional)`
 `onMutationMouseover (optional)`
