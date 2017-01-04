@@ -1,6 +1,6 @@
 {
   "name": "lolliplot",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "A protein viewer built with d3",
   "license": "Apache-2.0",
   "scripts": {
