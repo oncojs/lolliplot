@@ -55,6 +55,7 @@
   },
   "dependencies": {
     "d3-selection": "^1.0.3",
+    "lodash.countby": "^4.6.0",
     "lodash.startcase": "^4.4.0",
     "redux": "^3.6.0",
     "redux-actions": "^0.12.0"
