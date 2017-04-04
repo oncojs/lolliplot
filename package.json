@@ -46,6 +46,8 @@
     "eslint-plugin-react": "^6.8.0",
     "flow-bin": "^0.37.4",
     "react": "^15.4.1",
+    "react-dom": "^15.4.2",
+    "react-faux-dom": "^3.0.1",
     "react-hot-loader": "^3.0.0-beta.1",
     "webpack": "^1.14.0",
     "webpack-dev-server": "^1.16.1"
