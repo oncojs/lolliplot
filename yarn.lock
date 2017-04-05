@@ -2583,7 +2583,7 @@ faye-websocket@~0.11.0:
   dependencies:
     websocket-driver ">=0.5.1"
 
-fbjs@^0.8.4:
+fbjs@^0.8.1, fbjs@^0.8.4:
   version "0.8.6"
   resolved "https://registry.yarnpkg.com/fbjs/-/fbjs-0.8.6.tgz#7eb67d6986b2d5007a9b6e92e0e7cb6f75cad290"
   dependencies:
@@ -3132,13 +3132,7 @@ interpret@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/interpret/-/interpret-1.0.1.tgz#d579fb7f693b858004947af39fa0db49f795602c"
 
-invariant@^2.2.0:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/invariant/-/invariant-2.2.1.tgz#b097010547668c7e337028ebe816ebe36c8a8d54"
-  dependencies:
-    loose-envify "^1.0.0"
-
-invariant@^2.2.2:
+invariant@^2.2.0, invariant@^2.2.2:
   version "2.2.2"
   resolved "https://registry.yarnpkg.com/invariant/-/invariant-2.2.2.tgz#9e1f56ac0acdb6bf303306f338be3b204ae60360"
   dependencies:
@@ -4664,6 +4658,10 @@ qs@6.2.0, qs@^6.1.0, qs@~6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.2.0.tgz#3b7848c03c2dece69a9522b0fae8c4126d745f3b"
 
+query-selector@^1.0.9:
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/query-selector/-/query-selector-1.0.9.tgz#917fd31b7379b53fd441e536af647552e01e7e9e"
+
 query-string@^4.1.0:
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/query-string/-/query-string-4.2.3.tgz#9f27273d207a25a8ee4c7b8c74dcd45d556db822"
@@ -4718,6 +4716,21 @@ rc@^1.0.1, rc@^1.1.6, rc@~1.1.0:
 react-deep-force-update@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/react-deep-force-update/-/react-deep-force-update-2.0.1.tgz#4f7f6c12c3e7de42f345992a3c518236fa1ecad3"
+
+react-dom@^15.4.2:
+  version "15.4.2"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-15.4.2.tgz#015363f05b0a1fd52ae9efdd3a0060d90695208f"
+  dependencies:
+    fbjs "^0.8.1"
+    loose-envify "^1.1.0"
+    object-assign "^4.1.0"
+
+react-faux-dom@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/react-faux-dom/-/react-faux-dom-3.0.1.tgz#1e9f9c9cc0c0d9a4dbd694bd123d1b4bd2783f5a"
+  dependencies:
+    query-selector "^1.0.9"
+    style-attr "^1.0.1"
 
 react-hot-loader@3.0.0-beta.6, react-hot-loader@^3.0.0-beta.1:
   version "3.0.0-beta.6"
@@ -5343,6 +5356,10 @@ strip-eof@^1.0.0:
 strip-json-comments@~1.0.1, strip-json-comments@~1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-1.0.4.tgz#1e15fbcac97d3ee99bf2d73b4c656b082bbafb91"
+
+style-attr@^1.0.1:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/style-attr/-/style-attr-1.2.0.tgz#a54ce15210325dce7f3831daa2b8236878919f1f"
 
 style-loader@0.13.1:
   version "0.13.1"
