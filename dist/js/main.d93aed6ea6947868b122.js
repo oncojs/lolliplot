@@ -13897,6 +13897,7 @@ var proteinLolliplot = function proteinLolliplot() {
       slideStartMax = _ref.slideStartMax,
       slideStart = _ref.slideStart;
 
+  console.log('proteinLolliplot render start');
   (0, _invariant2.default)(d3, 'You must pass in the d3 library, either v3 || v4');
 
   d3.selection.prototype.attrs = _attrs2.default;
@@ -14245,7 +14246,9 @@ var proteinLolliplot = function proteinLolliplot() {
     highestValue: highestValue
   });
 
-  return root.toReact();
+  var rootReact = root.toReact();
+  console.log('finished', rootReact);
+  return rootReact;
 };
 
 /*----------------------------------------------------------------------------*/
@@ -14372,7 +14375,7 @@ var Lolliplot = function (_Component) {
   Lolliplot.prototype.render = function render() {
     var _this2 = this;
 
-    return _react2.default.createElement(_LolliplotNode2.default, _extends({
+    var lolliplotNodeInstance = _react2.default.createElement(_LolliplotNode2.default, _extends({
       d3: this.props.d3,
       height: 450,
       onProteinClick: function onProteinClick(d) {
@@ -14393,6 +14396,9 @@ var Lolliplot = function (_Component) {
         _this2.update({ proteinMouseover: false });
       }
     }, this.state, this.props));
+
+    console.log(lolliplotNodeInstance);
+    return lolliplotNodeInstance;
   };
 
   return Lolliplot;
@@ -53043,4 +53049,4 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 /***/ }
 ],[556]);
-//# sourceMappingURL=main.38defaa54af629984ecf.js.map
+//# sourceMappingURL=main.d93aed6ea6947868b122.js.map
