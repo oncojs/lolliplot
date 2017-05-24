@@ -51,7 +51,8 @@
     "webpack-dev-server": "^1.16.1"
   },
   "peerDependencies": {
-    "babel-polyfill": "*"
+    "babel-polyfill": "*",
+    "react": "*"
   },
   "dependencies": {
     "d3-selection": "^1.0.3",
