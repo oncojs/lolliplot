@@ -6,7 +6,7 @@
   "scripts": {
     "start": "knit -- server",
     "lint": "eslint src",
-    "build": "webpack -p --config webpack.dist.config.js",
+    "build": "knit -- build",
     "knit": "knit"
   },
   "repository": {
@@ -58,6 +58,7 @@
   "dependencies": {
     "d3-selection": "^1.0.3",
     "invariant": "^2.2.2",
+    "lodash": "4.17.11",
     "lodash.countby": "^4.6.0",
     "lodash.range": "^3.2.0",
     "lodash.startcase": "^4.4.0",

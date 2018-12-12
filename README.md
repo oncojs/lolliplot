@@ -1,5 +1,4 @@
-Protein Lolliplot :lollipop: :bar_chart:
-=====================
+# Protein Lolliplot :lollipop: :bar_chart:
 
 ![](lolliplot.gif)
 
@@ -8,7 +7,6 @@ Visualization to view relationship between common mutations and their location o
 ### **IMPORTANT: This library does NOT provide its own `d3` object**
 
 **You must pass in `d3` to the constructor function. Currently tested with v3 and v4.**
-
 
 ## Usage
 
@@ -23,7 +21,7 @@ import ProteinLolliplot, { setupStore } from '@oncojs/lolliplot'
 let store = setupStore({ domainWidth: 200 })
 store.subscribe(() => {
   let state = store.getState()
-  // listen for changes  
+  // listen for changes
 })
 
 let = {
@@ -119,7 +117,6 @@ Receive `(data, event)` as arguments.
 `onProteinMouseover (optional)`
 `onProteinMouseout (optional)`
 
-
 ### Returned Object
 
 `reset`: Sets the most zoomed out position, and resets any filter options
@@ -141,3 +138,5 @@ yarn && yarn start
 ```
 
 Then go to http://localhost:8080/
+
+To use `npm link`, run `npm run build` first to create the `dist/` folder.
